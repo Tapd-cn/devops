@@ -59,7 +59,7 @@ RUN groupadd sonarqube \
   && mkdir -p /tmp/package \
   \
   && cd /tmp/package \
-  && wget https://github.com/Tapd-cn/devops-test/releases/download/v1.0/devops-default-conf.tar.gz >/dev/null 2>&1  \
+  && wget https://test-1251542635.cos.ap-guangzhou.myqcloud.com/devops-default-conf.tar.gz >/dev/null 2>&1  \
   && tar -zxf devops-default-conf.tar.gz \
   && mv -f sonarqube-7.8 /usr/share/sonarqube  \
   && mv -f /usr/share/sonarqube/sonar.properties /usr/share/sonarqube/sonarqube-7.8/conf/sonar.properties \
