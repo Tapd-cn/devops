@@ -1,0 +1,1 @@
+tar -zcf package.tar.gz ./default_data/ ./nexus ./sonarqube-7.8/ nexus.properties sonar.properties TapdDevopsInitTool-1.0.jar plugins.txt
