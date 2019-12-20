@@ -5,7 +5,7 @@ sleep 10s
 
 echo $JENKINS_HOME;
 
-tapdAuthPre="http://www.tapd.cn/devops/auth/index/"
+tapdAuthPre="https://www.tapd.cn/devops/auth/index/"
 
 tapdAuthInfo=$(curl -s $tapdAuthPre$token)
 if [ -z $tapdAuthInfo ] || [ $tapdAuthInfo == "error" ]; then
