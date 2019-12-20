@@ -62,4 +62,3 @@ fi
 #exec "$@"
 #tail -f ${JENKINS_HOME}/logs/run.log
 tail -f /data/logs/init.log
-
