@@ -43,6 +43,7 @@ COPY start.sh /usr/local/bin/start.sh
 COPY init.sh /usr/local/bin/init.sh
 COPY addEnv.sh /usr/local/bin/addEnv.sh
 COPY check.sh /usr/local/bin/check.sh
+COPY check.sh /usr/local/bin/checkSystem.sh
 COPY initBeforeJenkinsStart.sh /usr/local/bin/initBeforeJenkinsStart.sh
 COPY TapdDevopsInitTool-1.0.jar /opt/tapd_tool.jar
 COPY nexus.properties /usr/share/nexus/nexus.properties
@@ -84,6 +85,7 @@ RUN groupadd sonarqube \
   && chmod +x /usr/local/bin/init.sh \
   && chmod +x /usr/local/bin/addEnv.sh \
   && chmod +x /usr/local/bin/check.sh \
+  && chmod +x /usr/local/bin/checkSystem.sh \
   && chmod +x /usr/local/bin/initBeforeJenkinsStart.sh \
   && ln -s $JAVA_HOME/bin/java /usr/local/bin/java
 
