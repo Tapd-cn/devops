@@ -6,7 +6,13 @@
 
 export TAPD_PLUGIN_VERSION=1.5.5.20191209
 
-touch "${COPY_REFERENCE_FILE_LOG}" || { echo "Can not write to ${COPY_REFERENCE_FILE_LOG}. Wrong volume permissions?"; exit 1; }
+touch "${COPY_REFERENCE_FILE_LOG}" || { echo -e "error code:203\nerror msg:Can not write to ${COPY_REFERENCE_FILE_LOG},volume permissions is wrong"; exit 1; }
+
+
+/usr/local/bin/check.sh
+/usr/local/bin/checkSystem.sh
+
+
 echo "--- Copying files at $(date)" >> "$COPY_REFERENCE_FILE_LOG"
 find /usr/share/jenkins/ref/ \( -type f -o -type l \) -exec bash -c '. /usr/local/bin/jenkins-support; for arg; do copy_reference_file "$arg"; done' _ {} +
 
@@ -38,8 +44,6 @@ mkdir -p /data/logs/
 if [ ! -f /data/logs/init.log ]; then
   touch /data/logs/init.log
 fi
-
-/usr/local/bin/check.sh
 
 #init before jenkins start
 if [ ! -f "$INIT_FILE" ]; then

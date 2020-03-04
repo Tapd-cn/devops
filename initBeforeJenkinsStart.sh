@@ -9,7 +9,7 @@ tapdAuthPre="https://www.tapd.cn/devops/auth/index/"
 
 tapdAuthInfo=$(curl -s $tapdAuthPre$token)
 if [ -z $tapdAuthInfo ] || [ $tapdAuthInfo == "error" ]; then
-    echo "TAPD auth faild"
+    echo -e "error code:301\nerror msg:TAPD auth faild"
     exit 1
 fi
 tapdAuthInfoArray=(${tapdAuthInfo//|/ })
