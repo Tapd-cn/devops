@@ -6,7 +6,7 @@
 
 export TAPD_PLUGIN_VERSION=1.5.5.20191209
 
-touch "${COPY_REFERENCE_FILE_LOG}" || { echo -e "error code:203\nerror msg:Can not write to ${COPY_REFERENCE_FILE_LOG},volume permissions is wrong"; exit 1; }
+touch "${COPY_REFERENCE_FILE_LOG}" || { echo -e "\033[31merror code:203\nerror msg:Can not write to ${COPY_REFERENCE_FILE_LOG},volume permissions is wrong\033[0m"; exit 1; }
 
 
 /usr/local/bin/check.sh

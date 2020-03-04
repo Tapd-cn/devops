@@ -4,7 +4,7 @@
 #磁盘容量是否大于等于20G
 
 if test -z "$(df -h|awk '($6=="/"){ print}'| awk '{print $4}'| grep G)"; then
-	echo -e "error code:201\nerror msg:Disk capacity must be no less than 20g"
+	echo -e "\033[31merror code:201\nerror msg:Disk capacity must be no less than 20G\033[0m"
     exit 1
 fi
 
@@ -12,7 +12,7 @@ fi
 availableSize=`df -h|awk '($6=="/"){ print}'| awk '{print $4}'| sed 's/G//g'| awk '{print int($0)}'`
 
 if [ $availableSize -lt 20 ];then
-	echo  "error code:201\nerror msg:Disk capacity must be no less than 20g"
+	echo  "\033[31merror code:201\nerror msg:Disk capacity must be no less than 20G\033[0m"
 	exit 1
 fi
 
@@ -33,7 +33,7 @@ function network()
 echo "testing network..."
 network
 if [ $? -eq 0 ];then
-    echo -e "error code:202\nerror msg:Invalid network"
+    echo -e "\033[31merror code:202\nerror msg:Invalid network\033[0m"
     exit 1
 fi
 echo "network test successfully"
