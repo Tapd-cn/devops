@@ -38,6 +38,16 @@ if [ $? -eq 0 ];then
 fi
 echo "network test successfully"
 
+#token是否有效
+
+tapdAuthPre="https://www.tapd.cn/devops/auth/index/"
+
+tapdAuthInfo=$(curl -s $tapdAuthPre$token)
+if [ -z $tapdAuthInfo ] || [ $tapdAuthInfo == "error" ]; then
+    echo -e "\033[31merror code:301\nerror msg:TAPD auth faild\033[0m"
+    exit 1
+fi
+
 
 
 
