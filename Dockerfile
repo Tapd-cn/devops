@@ -1,5 +1,5 @@
 ARG JENKINS_IMAGE=jenkins/jenkins:2.224
-ARG SONARQUBE_IMAGE=sonarqube:8.9-community
+ARG SONARQUBE_IMAGE=sonarqube:8.9.0-community
 ARG NEXUS_IMAGE=sonatype/nexus3:3.26.1
 ARG JDK_IMAGE=ccr.ccs.tencentyun.com/tapd-devops/tencentkona11:1.0.0
 
@@ -93,7 +93,7 @@ ENV INIT_FILE=${INIT_FILE} \
     JENKINS_VERSION=2.224 \
     SONAR_SCHEME=http \
     SONAR_PORT=9000 \
-    SONAR_VERSION=8.9.1.44547 \
+    SONAR_VERSION=8.9.0.43852 \
     NEXUS_SCHEME=http \
     NEXUS_PORT=8081 \
     NEXUS_DATA=$SONATYPE_DIR/nexus-data \
