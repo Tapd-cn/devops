@@ -11,7 +11,10 @@ FROM ${NEXUS_IMAGE} AS NEXUS
 
 FROM ${JDK_IMAGE}
 
-RUN apk add --no-cache \
+RUN echo -e https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.12/main/ > /etc/apk/repositories \
+  && echo -e https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.12/community/ >> /etc/apk/repositories \
+  && apk update \
+  && apk add --no-cache \
   su-exec \
   bash \
   coreutils \
