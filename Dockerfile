@@ -1,7 +1,7 @@
 ARG JENKINS_IMAGE=jenkins/jenkins:2.224
 ARG SONARQUBE_IMAGE=sonarqube:8.9-community
 ARG NEXUS_IMAGE=sonatype/nexus3:3.26.1
-ARG JDK_IMAGE=mirrors.tencent.com/tjdk/tencentkona11
+ARG JDK_IMAGE=ccr.ccs.tencentyun.com/konajdk_repo/tencent_konajdk_11
 
 FROM ${JENKINS_IMAGE} AS JENKINS
 
@@ -100,7 +100,7 @@ ENV INIT_FILE=${INIT_FILE} \
 
 # download java8 for nexus
 WORKDIR /user/share/jvm
-RUN  curl -o TencentKona8.tar.gz http://bia.oa.com/mirror/8/0/0/linux-x86_64/b1/TencentKona8.0.0-internal_jdk_linux-x86_64_8u232.tar.gz \
+RUN  curl -o TencentKona8.tar.gz https://devops-1251542635.cos.ap-guangzhou.myqcloud.com/TencentKona8.0.0-internal_jdk_linux-x86_64_8u232.tar.gz \
   && tar -zxf TencentKona8.tar.gz \
   && rm TencentKona8.tar.gz
 
