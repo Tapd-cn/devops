@@ -1,7 +1,7 @@
 ARG JENKINS_IMAGE=jenkins/jenkins:2.224
 ARG SONARQUBE_IMAGE=sonarqube:8.9-community
 ARG NEXUS_IMAGE=sonatype/nexus3:3.26.1
-ARG JDK_IMAGE=ccr.ccs.tencentyun.com/konajdk_repo/tencent_konajdk_11
+ARG JDK_IMAGE=ccr.ccs.tencentyun.com/tapd-devops/tencentkona11:1.0.0
 
 FROM ${JENKINS_IMAGE} AS JENKINS
 
