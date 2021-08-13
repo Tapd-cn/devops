@@ -28,7 +28,8 @@ sonarqubeChangePwdURL=$SONAR_SCHEME://localhost:9000/api/users/change_password
 echo "generating new password of Nexus admin account...";
 nexusInitPwd=$(< /dev/urandom tr -dc 'A-Za-z0-9' | head -c32 )
 echo "save New Nexus Admin Password";
-curl -slL -u admin:${oldNexusPwd} -X PUT --data-raw "${nexusInitPwd}" -H "Content-Type: text/plain; charset=UTF-8" $nexusChangePwdURL
+echo "curl -lL -u admin:${oldNexusPwd} -X PUT --data-raw \"${nexusInitPwd}\" -H \"Content-Type: text/plain; charset=UTF-8\" $nexusChangePwdURL"
+curl -lL -u admin:${oldNexusPwd} -X PUT --data-raw "${nexusInitPwd}" -H "Content-Type: text/plain; charset=UTF-8" $nexusChangePwdURL
 echo $nexusInitPwd >/data/secrets/nexusInitialAdminPassword
 
 echo "generating ApiToken of jenkins admin account...";
