@@ -1,14 +1,14 @@
 #! /bin/bash -e
 
 echo "waiting for jenkins starting fully..."
-sleep 15s
+sleep 20s
 
 # set jenkins environment variable
 source /usr/local/bin/addEnv.sh
 
 # set jenkins environment variable end
 echo "Waiting for initializing data... This may take some time ..."
-sleep 25s
+sleep 30s
 
 JenkinsPwd=$(cat /data/secrets/jenkinsInitialAdminPassword)
 oldNexusPwd=$(cat $NEXUS_DATA/admin.password)
@@ -28,8 +28,7 @@ sonarqubeChangePwdURL=$SONAR_SCHEME://localhost:9000/api/users/change_password
 echo "generating new password of Nexus admin account...";
 nexusInitPwd=$(< /dev/urandom tr -dc 'A-Za-z0-9' | head -c32 )
 echo "save New Nexus Admin Password";
-echo "curl -lL -u admin:${oldNexusPwd} -X PUT --data-raw \"${nexusInitPwd}\" -H \"Content-Type: text/plain; charset=UTF-8\" $nexusChangePwdURL"
-curl -lL -u admin:${oldNexusPwd} -X PUT --data-raw "${nexusInitPwd}" -H "Content-Type: text/plain; charset=UTF-8" $nexusChangePwdURL
+curl -slL -u admin:${oldNexusPwd} -X PUT --data-raw "${nexusInitPwd}" -H "Content-Type: text/plain; charset=UTF-8" $nexusChangePwdURL
 echo $nexusInitPwd >/data/secrets/nexusInitialAdminPassword
 
 echo "generating ApiToken of jenkins admin account...";

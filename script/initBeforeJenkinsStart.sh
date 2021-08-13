@@ -1,7 +1,7 @@
 echo "waiting for nexus starting fully..."
-sleep 10s
+sleep 20s
 echo "waiting for sonarqube starting fully..."
-sleep 10s
+sleep 20s
 
 #modify demo workspaceId
 su-exec jenkins /bin/bash -c  "sed -i 's/<tapdWorkspaceId>xxx<\/tapdWorkspaceId>/<tapdWorkspaceId>$TAPD_WORKSPACE_ID<\/tapdWorkspaceId>/' /data/devops_data/jenkins_home/jobs/DemoPipeline/config.xml"
