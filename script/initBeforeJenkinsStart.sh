@@ -10,7 +10,7 @@ su-exec jenkins /bin/bash -c "sed -i 's%<uuid>defaultJobUuid</uuid>%<uuid>${newJ
 
 echo "generating new password of Jenkins admin account..."
 jenkinsInitPwd=$(tr </dev/urandom -dc 'A-Za-z0-9' | head -c32)
-echo $jenkinsInitPwd >/data/secrets/jenkinsInitialAdminPassword
+echo $jenkinsInitPwd >/data/devops_data/secrets/jenkinsInitialAdminPassword
 
 echo "save New Jenkins Admin Password"
 jenkinsInitPwdHash=$(java -jar /opt/tapd_tool.jar hash-jenkins-password ${jenkinsInitPwd} | sed 's%\$%\\$%g')

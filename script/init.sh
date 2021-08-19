@@ -10,7 +10,7 @@ source /usr/local/bin/addEnv.sh
 echo "Waiting for initializing data... This may take some time ..."
 sleep 30s
 
-JenkinsPwd=$(cat /data/secrets/jenkinsInitialAdminPassword)
+JenkinsPwd=$(cat /data/devops_data/secrets/jenkinsInitialAdminPassword)
 oldNexusPwd=$(cat $NEXUS_DATA/admin.password)
 
 # generate url
@@ -29,7 +29,7 @@ echo "generating new password of Nexus admin account...";
 nexusInitPwd=$(< /dev/urandom tr -dc 'A-Za-z0-9' | head -c32 )
 echo "save New Nexus Admin Password";
 curl -slL -u admin:${oldNexusPwd} -X PUT --data-raw "${nexusInitPwd}" -H "Content-Type: text/plain; charset=UTF-8" $nexusChangePwdURL
-echo $nexusInitPwd >/data/secrets/nexusInitialAdminPassword
+echo $nexusInitPwd >/data/devops_data/secrets/nexusInitialAdminPassword
 
 echo "generating ApiToken of jenkins admin account...";
 CRUMB=$(curl -slL -u "admin:${JenkinsPwd}" $jenkinsCrumbTokenURL -c cookies.txt)
@@ -39,7 +39,6 @@ JenkinsApiToken=$(curl -slL -u "admin:${JenkinsPwd}" $jenkinsCreateAPITokenURL \
 --data 'newTokenName=devopsinit' \
 -b cookies.txt | sed -n -e 's/"//gp' | sed -n -e 's/,/\n/gp'| grep tokenValue: | awk -F ':' '{print $2}')
 JenkinsApiToken=${JenkinsApiToken%\}\}*}
-echo $JenkinsApiToken > javiertest
 
 echo "generating credential for nexus...";
 CRUMB=$(curl -slL -u "admin:${JenkinsPwd}" $jenkinsCrumbTokenURL)
@@ -53,14 +52,18 @@ curl -slL -X POST -u "admin:${JenkinsApiToken}" -H "${CRUMB}" $jenkinsAddNexusCf
 echo "generating SonarQube token...";
 curl -slL -u admin:admin -X POST -d "login=admin&name=jenkins" $sonarqubeRevokeTokenURL
 sonarQubeServerToken=$(curl -slL --basic -u admin:admin -X POST -d "login=admin&name=jenkins" $sonarqubeGenerateTokenURL | sed -n -e 's/"//gp' |sed -n -e 's/,/\n/gp' | grep token|awk -F ':' '{print $2}')
+echo "generating credential for sonar...";
+CRUMB=$(curl -slL -u "admin:${JenkinsPwd}" $jenkinsCrumbTokenURL)
+curl -s -X POST -u "admin:${JenkinsApiToken}"  -H "${CRUMB}" $jenkinsCreateCredentialsURL --data-urlencode 'json={"":"0","credentials":{"scope":"GLOBAL","id":"DevOpsSonarQubeToken","secret":"'"${sonarQubeServerToken}"'","description":"DevOpsSonarQubeToken","$class":"org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl"}}'
+sleep 5;
 echo "adding SonarQube configuration to jenkins...";
 CRUMB=$(curl -slL -u "admin:${JenkinsPwd}" $jenkinsCrumbTokenURL)
-curl -slL -X POST -u "admin:${JenkinsApiToken}" -H "${CRUMB}" $jenkinsAddSonarqubeCfgURL  --data-urlencode "name=DevOpsSonarQube" --data-urlencode  "serverUrl=${SONAR_SCHEME}://${HOST}:${SONAR_PORT}" --data-urlencode "serverAuthenticationToken=${sonarQubeServerToken}"
+curl -slL -X POST -u "admin:${JenkinsApiToken}" -H "${CRUMB}" $jenkinsAddSonarqubeCfgURL  --data-urlencode "name=DevOpsSonarQube" --data-urlencode  "serverUrl=${SONAR_SCHEME}://${HOST}:${SONAR_PORT}" --data-urlencode "credentialsId=DevOpsSonarQubeToken"
 echo "generating new password of Sonarqube admin account...";
 sonarqubeInitPwd=$(< /dev/urandom tr -dc 'A-Za-z0-9' | head -c32 )
 echo "save New Sonarqube Admin Password";
 curl -slL -u admin:admin -X POST -d "login=admin&password=${sonarqubeInitPwd}&previousPassword=admin" $sonarqubeChangePwdURL
-echo $sonarqubeInitPwd >/data/secrets/sonarInitialAdminPassword
+echo $sonarqubeInitPwd >/data/devops_data/secrets/sonarInitialAdminPassword
 
 echo "configuring tapd plugin...";
 /user/share/jvm/TencentKona-8.0.0-232/bin/java -jar /opt/tapd_tool.jar config-tapd --username="admin" --password="${JenkinsPwd}"
@@ -76,9 +79,9 @@ echo -e "\ntrigger build"
 CRUMB=$(curl -slL -u "admin:${JenkinsPwd}" $jenkinsCrumbTokenURL)
 curl -slL -X POST -u "admin:${JenkinsApiToken}" -H "${CRUMB}" -H "application/x-www-form-urlencoded" --data-urlencode 'tapd_info={"ipipeBuildId":0,"cause":"admin","system_default_build_user":"admin"}' $jenkinsDemoPipelineBuildURL
 
-echo -e "\nJenkins Password for admin is \n********************************\n${JenkinsPwd} \n********************************\nyou also can find it in /data/secrets/jenkinsInitialAdminPassword\n"
-echo -e "Nexus Password for admin is \n********************************\n${nexusInitPwd} \n******************************** \nyou also can find it in /data/secrets/nexusInitialAdminPassword\n"
-echo -e "Sonarqube Password for admin is \n********************************\n${sonarqubeInitPwd} \n******************************** \nyou also can find it in /data/secrets/sonarInitialAdminPassword\n"
+echo -e "\nJenkins Password for admin is \n********************************\n${JenkinsPwd} \n********************************\nyou also can find it in /data/devops_data/secrets/jenkinsInitialAdminPassword\n"
+echo -e "Nexus Password for admin is \n********************************\n${nexusInitPwd} \n******************************** \nyou also can find it in /data/devops_data/secrets/nexusInitialAdminPassword\n"
+echo -e "Sonarqube Password for admin is \n********************************\n${sonarqubeInitPwd} \n******************************** \nyou also can find it in /data/devops_data/secrets/sonarInitialAdminPassword\n"
 
 echo -e "\n\nInitializing Finished\n\n"
 

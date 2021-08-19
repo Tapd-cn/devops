@@ -1,4 +1,4 @@
-ARG JENKINS_IMAGE=jenkins/jenkins:2.224
+ARG JENKINS_IMAGE=jenkins/jenkins:2.235-alpine
 ARG SONARQUBE_IMAGE=sonarqube:8.9.0-community
 ARG NEXUS_IMAGE=sonatype/nexus3:3.26.1
 ARG JDK_IMAGE=ccr.ccs.tencentyun.com/tapd-devops/tencentkona11:1.0.0
@@ -28,11 +28,6 @@ RUN echo -e https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.12/main/ > /etc/apk/r
   ttf-dejavu \
   tzdata \
   unzip
-
-ARG user=jenkins
-ARG group=jenkins
-ARG uid=1000
-ARG gid=1000
 
 ARG jenkins_port=8080
 ARG jenkins_agent_port=50000
@@ -66,21 +61,6 @@ RUN curl -fsSLO https://github.com/git-lfs/git-lfs/releases/download/${GIT_LFS_V
   && rm -rf git-lfs-linux-$(dpkg --print-architecture | tr '-' ' '| awk '{print $NF}')-${GIT_LFS_VERSION}.tar.gz sha256sums.asc /root/.gnupg \
   && git lfs install
 
-# Jenkins is run with user `jenkins`, uid = 1000
-# If you bind mount a volume from the host or a data container,
-# ensure you use the same uid
-RUN mkdir -p $JENKINS_HOME \
-  && chown ${uid}:${gid} $JENKINS_HOME \
-  && addgroup -g ${gid} ${group} \
-  && adduser -h "$JENKINS_HOME" -u ${uid} -G ${group} -s /bin/bash -D ${user} \
-  && mkdir -p /usr/share/jenkins/ref/init.groovy.d \
-  && chown -R ${user} "$JENKINS_HOME" /usr/share/jenkins/ref
-
-# for main web interface:
-EXPOSE ${jenkins_port}
-# will be used by attached agents:
-EXPOSE ${jenkins_agent_port}
-
 # add custom config for all in one devops
 USER root
 
@@ -110,7 +90,16 @@ RUN  curl -o TencentKona8.tar.gz https://devops-1251542635.cos.ap-guangzhou.myqc
 ENV INSTALL4J_JAVA_HOME=/user/share/jvm/TencentKona-8.0.0-232 \
     INSTALL4J_ADD_VM_PARAMS="-Xms2703m -Xmx2703m -XX:MaxDirectMemorySize=2703m -Djava.util.prefs.userRoot=${NEXUS_DATA}/javaprefs"
 
-RUN  mkdir -p ${SONARQUBE_HOME} \
+# Jenkins is run with user `jenkins`, uid = 1000
+# If you bind mount a volume from the host or a data container,
+# ensure you use the same uid
+RUN mkdir -p ${JENKINS_HOME} \
+  && chown 1000:1000 ${JENKINS_HOME} \
+  && addgroup -g 1000 jenkins \
+  && adduser -h "${JENKINS_HOME}" -u 1000 -G jenkins -s /bin/bash -D jenkins \
+  && mkdir -p /usr/share/jenkins/ref/init.groovy.d \
+  && chown -R jenkins "${JENKINS_HOME}" /usr/share/jenkins/ref \
+  && mkdir -p ${SONARQUBE_HOME} \
   && mkdir -p ${SONATYPE_DIR} \
   && mkdir -p ${NEXUS_DATA} \
   && addgroup sonarqube \
@@ -133,8 +122,14 @@ RUN chmod +x /usr/local/bin/*.sh \
   && chown -R sonarqube:sonarqube ${SONARQUBE_HOME} \
   && chown -R nexus:nexus ${SONATYPE_DIR}
 
-EXPOSE $SONAR_PORT
-EXPOSE $NEXUS_PORT
+# for main web interface:
+EXPOSE ${jenkins_port}
+# will be used by attached agents:
+EXPOSE ${jenkins_agent_port}
+EXPOSE ${nexus_port}
+EXPOSE ${sonarqube_port}
+# ports for backup
+EXPOSE 7720-7730
 
 # home directory is a volume, so configuration and build history
 # can be persisted and survive image upgrades
