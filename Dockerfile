@@ -1,4 +1,4 @@
-ARG JENKINS_IMAGE=jenkins/jenkins:2.235-alpine
+ARG JENKINS_IMAGE=jenkins/jenkins:2.235.5-lts-alpine
 ARG SONARQUBE_IMAGE=sonarqube:8.9.0-community
 ARG NEXUS_IMAGE=sonatype/nexus3:3.26.1
 ARG JDK_IMAGE=ccr.ccs.tencentyun.com/tapd-devops/tencentkona11:1.0.0
@@ -64,7 +64,11 @@ RUN curl -fsSLO https://github.com/git-lfs/git-lfs/releases/download/${GIT_LFS_V
 # add custom config for all in one devops
 USER root
 
-ENV INIT_FILE=${INIT_FILE} \
+ENV TZ=Asia/Shanghai \
+    LANG=C.UTF-8 \
+    LANGUAGE=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    INIT_FILE=${INIT_FILE} \
     SONARQUBE_HOME=${SONARQUBE_HOME} \
     SONATYPE_DIR=${SONATYPE_DIR} \
     NEXUS_HOME=${NEXUS_HOME} \
@@ -79,7 +83,7 @@ ENV INIT_FILE=${INIT_FILE} \
     NEXUS_DATA=$SONATYPE_DIR/nexus-data \
     NEXUS_CONTEXT=''  \
     SONATYPE_WORK=$SONATYPE_DIR/sonatype-work \
-    TAPD_PLUGIN_VERSION=1.6.2.20210722.1
+    TAPD_PLUGIN_VERSION=1.6.2.20210722.2
 
 # download java8 for nexus
 WORKDIR /user/share/jvm
