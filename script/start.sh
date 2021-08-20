@@ -24,17 +24,17 @@ su-exec nexus /bin/bash -c "export RUN_AS_USER=nexus && cd $NEXUS_HOME && nohup 
 su-exec sonarqube /bin/bash -c "cd $SONARQUBE_HOME && nohup $SONARQUBE_HOME/bin/sonar.sh >/dev/null 2>&1 &"
 
 # touch init log
-mkdir -p /data/secrets/
-mkdir -p /data/logs/
-if [ ! -f /data/logs/init.log ]; then
-  touch /data/logs/init.log
+mkdir -p /data/devops_data/secrets/
+mkdir -p /data/devops_data/logs/
+if [ ! -f /data/devops_data/logs/init.log ]; then
+  touch /data/devops_data/logs/init.log
 fi
 
 /usr/local/bin/check.sh
 
 # init before jenkins start
 if [ ! -f "$INIT_FILE" ]; then
-  source /usr/local/bin/initBeforeJenkinsStart.sh > /data/logs/init.log
+  source /usr/local/bin/initBeforeJenkinsStart.sh > /data/devops_data/logs/init.log
   echo "init before jenkins start";
 fi
 
@@ -45,9 +45,9 @@ echo "jenkins is started";
 
 #init 
 if [ ! -f "$INIT_FILE" ]; then
-  source /usr/local/bin/init.sh >> /data/logs/init.log &
+  source /usr/local/bin/init.sh >> /data/devops_data/logs/init.log &
 fi
 
 # exec "$@"
 # su - jenkins -c "tail -f ${JENKINS_HOME}/logs/run.log"
-tail -f /data/logs/init.log
+tail -f /data/devops_data/logs/init.log
