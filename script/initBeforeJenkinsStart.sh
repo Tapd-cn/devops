@@ -3,6 +3,9 @@ sleep 20s
 echo "waiting for sonarqube starting fully..."
 sleep 20s
 
+# set jenkins environment variable
+source /usr/local/bin/addEnv.sh
+
 #modify demo workspaceId
 su-exec jenkins /bin/bash -c  "sed -i 's/<tapdWorkspaceId>xxx<\/tapdWorkspaceId>/<tapdWorkspaceId>$TAPD_WORKSPACE_ID<\/tapdWorkspaceId>/' /data/devops_data/jenkins_home/jobs/DemoPipeline/config.xml"
 newJenkinsJobUuid=$(< /dev/urandom tr -dc 'A-Za-z0-9' | head -c32 )

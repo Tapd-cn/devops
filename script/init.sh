@@ -3,9 +3,6 @@
 echo "waiting for jenkins starting fully..."
 sleep 20s
 
-# set jenkins environment variable
-source /usr/local/bin/addEnv.sh
-
 # set jenkins environment variable end
 echo "Waiting for initializing data... This may take some time ..."
 sleep 30s
