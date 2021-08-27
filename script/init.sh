@@ -11,16 +11,16 @@ JenkinsPwd=$(cat /data/devops_data/secrets/jenkinsInitialAdminPassword)
 oldNexusPwd=$(cat $NEXUS_DATA/admin.password)
 
 # generate url
-jenkinsCrumbTokenURL=$JENKINS_SCHEME://localhost:8080/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\)
-jenkinsCreateAPITokenURL=$JENKINS_SCHEME://localhost:8080/user/admin/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken
-jenkinsCreateCredentialsURL=$JENKINS_SCHEME://localhost:8080/credentials/store/system/domain/_/createCredentials
-jenkinsAddNexusCfgURL=$JENKINS_SCHEME://localhost:8080/tapd-devops-init/nexus
-jenkinsAddSonarqubeCfgURL=$JENKINS_SCHEME://localhost:8080/tapd-devops-init/sonar
-jenkinsDemoPipelineBuildURL=$JENKINS_SCHEME://localhost:8080/job/DemoPipeline/tapdbuild/build
-nexusChangePwdURL=$NEXUS_SCHEME://localhost:8081/service/rest/v1/security/users/admin/change-password
-sonarqubeRevokeTokenURL=$SONAR_SCHEME://localhost:9000/api/user_tokens/revoke
-sonarqubeGenerateTokenURL=$SONAR_SCHEME://localhost:9000/api/user_tokens/generate
-sonarqubeChangePwdURL=$SONAR_SCHEME://localhost:9000/api/users/change_password
+jenkinsCrumbTokenURL=http://localhost:8080/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\)
+jenkinsCreateAPITokenURL=http://localhost:8080/user/admin/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken
+jenkinsCreateCredentialsURL=http://localhost:8080/credentials/store/system/domain/_/createCredentials
+jenkinsAddNexusCfgURL=http://localhost:8080/tapd-devops-init/nexus
+jenkinsAddSonarqubeCfgURL=http://localhost:8080/tapd-devops-init/sonar
+jenkinsDemoPipelineBuildURL=http://localhost:8080/job/DemoPipeline/tapdbuild/build
+nexusChangePwdURL=http://localhost:8081/service/rest/v1/security/users/admin/change-password
+sonarqubeRevokeTokenURL=http://localhost:9000/api/user_tokens/revoke
+sonarqubeGenerateTokenURL=http://localhost:9000/api/user_tokens/generate
+sonarqubeChangePwdURL=http://localhost:9000/api/users/change_password
 
 echo "generating new password of Nexus admin account...";
 nexusInitPwd=$(< /dev/urandom tr -dc 'A-Za-z0-9' | head -c32 )
@@ -43,7 +43,7 @@ curl -s -X POST -u "admin:${JenkinsApiToken}"  -H "${CRUMB}" $jenkinsCreateCrede
 sleep 5;
 echo "adding Nexus configuration to jenkins ...";
 CRUMB=$(curl -slL -u "admin:${JenkinsPwd}" $jenkinsCrumbTokenURL)
-curl -slL -X POST -u "admin:${JenkinsApiToken}" -H "${CRUMB}" $jenkinsAddNexusCfgURL --data-urlencode "id=DevOpsNexus" --data-urlencode "displayName=DevOpsNexus" --data-urlencode "serverUrl=${NEXUS_SCHEME}://${HOST}:${NEXUS_PORT}" --data-urlencode "credentialsId=DevOpsNexusPassword"
+curl -slL -X POST -u "admin:${JenkinsApiToken}" -H "${CRUMB}" $jenkinsAddNexusCfgURL --data-urlencode "id=DevOpsNexus" --data-urlencode "displayName=DevOpsNexus" --data-urlencode "serverUrl=http://${HOST}:${NEXUS_PORT}" --data-urlencode "credentialsId=DevOpsNexusPassword"
 
 
 echo "generating SonarQube token...";
@@ -55,7 +55,7 @@ curl -s -X POST -u "admin:${JenkinsApiToken}"  -H "${CRUMB}" $jenkinsCreateCrede
 sleep 5;
 echo "adding SonarQube configuration to jenkins...";
 CRUMB=$(curl -slL -u "admin:${JenkinsPwd}" $jenkinsCrumbTokenURL)
-curl -slL -X POST -u "admin:${JenkinsApiToken}" -H "${CRUMB}" $jenkinsAddSonarqubeCfgURL  --data-urlencode "name=DevOpsSonarQube" --data-urlencode  "serverUrl=${SONAR_SCHEME}://${HOST}:${SONAR_PORT}" --data-urlencode "credentialsId=DevOpsSonarQubeToken"
+curl -slL -X POST -u "admin:${JenkinsApiToken}" -H "${CRUMB}" $jenkinsAddSonarqubeCfgURL  --data-urlencode "name=DevOpsSonarQube" --data-urlencode  "serverUrl=http://${HOST}:${SONAR_PORT}" --data-urlencode "credentialsId=DevOpsSonarQubeToken"
 echo "generating new password of Sonarqube admin account...";
 sonarqubeInitPwd=$(< /dev/urandom tr -dc 'A-Za-z0-9' | head -c32 )
 echo "save New Sonarqube Admin Password";

@@ -50,4 +50,4 @@ fi
 
 # exec "$@"
 # su - jenkins -c "tail -f ${JENKINS_HOME}/logs/run.log"
-tail -f /data/devops_data/logs/init.log
+tail -f -n +1 /data/devops_data/logs/init.log
