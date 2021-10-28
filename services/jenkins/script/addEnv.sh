@@ -1,5 +1,5 @@
 #! /bin/bash -e
-tapdAuthPre="https://www.tapd.cn/devops/auth/index/"
+tapdAuthPre="${TAPD_HOST}/devops/auth/index/"
 
 tapdAuthInfo=$(curl -s $tapdAuthPre$token)
 if [ -z $tapdAuthInfo ] || [ $tapdAuthInfo == "error" ]; then

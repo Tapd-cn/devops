@@ -19,6 +19,7 @@ services:
         token: ${token}
         TZ: "$TZ"
         TAPD_PLUGIN_VERSION: ${TAPD_PLUGIN_VERSION}
+        TAPD_HOST: ${TAPD_HOST}
       networks:
         - default
   jdk:
@@ -45,6 +46,7 @@ services:
         TAPD_PLUGIN_VERSION: ${TAPD_PLUGIN_VERSION}
         JENKINS_VERSION: ${JENKINS_VERSION}
         INIT_FILE: ${INIT_FILE}
+        TAPD_HOST: ${TAPD_HOST}
       networks:
         - default
   sonarqube:
