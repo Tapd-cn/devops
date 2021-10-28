@@ -12,3 +12,13 @@ docker build --build-arg JENKINS_IMAGE=jenkins/jenkins:2.224 --build-arg TAPD_PL
 ###run
 docker run -d -p 8099:8080 javier-jenkins-test
 
+
+##Docker compose usage
+
+###configure
+cp .env.example .env
+
+###run
+docker-compose up -d
+
+
