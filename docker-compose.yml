@@ -7,70 +7,70 @@ services:
         JENKINS_VERSION: ${JENKINS_VERSION}
         GIT_LFS_VERSION: ${GIT_LFS_VERSION}
         TZ: "$TZ"
-      container_name: jenkins
-      ports:
-        - "${JENKINS_PORT}:8080"
-        - "${JENKINS_AGENT_PORT}:50000"
-      volumes:
-        - ${JENKINS_HOME}:/var/jenkins_home
-      restart: always
-      environment:
-        JAVA_OPTS: "-Duser.timezone=Asia/Shanghai"
-        token: ${token}
-        TZ: "$TZ"
-        TAPD_PLUGIN_VERSION: ${TAPD_PLUGIN_VERSION}
-        TAPD_HOST: ${TAPD_HOST}
-      networks:
-        - default
+    container_name: jenkins
+    ports:
+      - "${JENKINS_PORT}:8080"
+      - "${JENKINS_AGENT_PORT}:50000"
+    volumes:
+      - ${JENKINS_HOME}:/var/jenkins_home
+    restart: always
+    environment:
+      JAVA_OPTS: "-Duser.timezone=Asia/Shanghai"
+      token: ${token}
+      TZ: "$TZ"
+      TAPD_PLUGIN_VERSION: ${TAPD_PLUGIN_VERSION}
+      TAPD_HOST: ${TAPD_HOST}
+    networks:
+      - default
   jdk:
     build:
       context: ./services/jdk
       args:
         TZ: "$TZ"
-      container_name: jdk
-      ports:
-      volumes:
-        - ${BASE_DATA_HOME}:/data/devops_data
-      restart: always
-      environment:
-        TZ: "$TZ"
-        JENKINS_HOME: ${JENKINS_HOME}
-        NEXUS_DATA: ${NEXUS_DATA}
-        JENKINS_SCHEME: ${JENKINS_SCHEME}
-        SONAR_SCHEME: ${SONAR_SCHEME}
-        NEXUS_SCHEME: ${NEXUS_SCHEME}
-        JENKINS_PORT: ${JENKINS_PORT}
-        SONAR_PORT: ${SONAR_PORT}
-        NEXUS_PORT: ${NEXUS_PORT}
-        token: ${token}
-        TAPD_PLUGIN_VERSION: ${TAPD_PLUGIN_VERSION}
-        JENKINS_VERSION: ${JENKINS_VERSION}
-        INIT_FILE: ${INIT_FILE}
-        TAPD_HOST: ${TAPD_HOST}
-      networks:
-        - default
+        BASE_DATA_HOME: ${BASE_DATA_HOME}
+    container_name: jdk
+    volumes:
+      - ${BASE_DATA_HOME}:/data/devops_data
+    restart: always
+    environment:
+      TZ: "$TZ"
+      JENKINS_HOME: ${JENKINS_HOME}
+      NEXUS_DATA: ${NEXUS_DATA}
+      JENKINS_SCHEME: ${JENKINS_SCHEME}
+      SONAR_SCHEME: ${SONAR_SCHEME}
+      NEXUS_SCHEME: ${NEXUS_SCHEME}
+      JENKINS_PORT: ${JENKINS_PORT}
+      SONAR_PORT: ${SONAR_PORT}
+      NEXUS_PORT: ${NEXUS_PORT}
+      token: ${token}
+      TAPD_PLUGIN_VERSION: ${TAPD_PLUGIN_VERSION}
+      JENKINS_VERSION: ${JENKINS_VERSION}
+      INIT_FILE: ${INIT_FILE}
+      TAPD_HOST: ${TAPD_HOST}
+    networks:
+      - default
   sonarqube:
     image: sonarqube:${SONARQUBE_VERSION}
-      container_name: sonarqube
-      ports:
-        - "${SONAR_PORT}:9000"
-      volumes:
-        - ${SONARQUBE_HOME}:/opt/sonarqube
-      restart: always
-      environment:
-        TZ: "$TZ"
-      networks:
-        - default
+    container_name: sonarqube
+    ports:
+      - "${SONAR_PORT}:9000"
+    volumes:
+      - ${SONARQUBE_HOME}:/opt/sonarqube
+    restart: always
+    environment:
+      TZ: "$TZ"
+    networks:
+      - default
   nexus:
     image: sonatype/nexus3:${NEXUS_VERSION}
-      container_name: nexus
-      ports:
-        - "${NEXUS_PORT}:8081"
-      volumes:
-        - ${SONATYPE_DIR}:/opt/sonatype
-        - ${NEXUS_DATA}:/nexus-data
-      restart: always
-      environment:
-        TZ: "$TZ"
-      networks:
-        - default
+    container_name: nexus
+    ports:
+      - "${NEXUS_PORT}:8081"
+    volumes:
+      - ${SONATYPE_DIR}:/opt/sonatype
+      - ${NEXUS_DATA}:/nexus-data
+    restart: always
+    environment:
+      TZ: "$TZ"
+    networks:
+      - default

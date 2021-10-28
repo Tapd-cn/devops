@@ -33,3 +33,4 @@ fi
 
 # exec "$@"
 # su - jenkins -c "tail -f ${JENKINS_HOME}/logs/run.log"
+tail -f /data/logs/init.log
