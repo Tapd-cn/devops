@@ -21,7 +21,7 @@ cp .env.example .env
 ###run
 docker-compose up -d
 
-###stop
+###remove & flush data
 docker-compose down -v
 
 
