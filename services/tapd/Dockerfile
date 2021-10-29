@@ -3,7 +3,7 @@ FROM mirrors.tencent.com/tjdk/tencentkona11
 ARG TZ
 ARG BASE_DATA_HOME
 
-COPY ../../devops-docker-tool-1.2.jar /opt/tapd_tool.jar
+COPY devops-docker-tool-1.2.jar /opt/tapd_tool.jar
 COPY --chown=root:root script /usr/local/bin/
 
 WORKDIR /user/share/jvm

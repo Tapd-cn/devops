@@ -28,7 +28,7 @@ jenkinsInitPwd=$(tr </dev/urandom -dc 'A-Za-z0-9' | head -c32)
 echo $jenkinsInitPwd >${JENKINS_HOME}/jenkinsInitialAdminPassword
 
 echo "save New Jenkins Admin Password"
-jenkinsInitPwdHash=$(java -jar /opt/tapd_tool.jar --jenkinsHost=http://localhost:8080 hash-jenkins-password ${jenkinsInitPwd} | sed 's%\$%\\$%g')
+jenkinsInitPwdHash=$(java -jar /opt/tapd_tool.jar hash-jenkins-password ${jenkinsInitPwd} | sed 's%\$%\\$%g')
 /bin/bash -c "sed -i 's%<passwordHash>#jbcrypt:.*</passwordHash>%<passwordHash>#jbcrypt:${jenkinsInitPwdHash}</passwordHash>%g' ${JENKINS_HOME}/users/admin_*/config.xml"
 
 

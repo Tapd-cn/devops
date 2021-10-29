@@ -2,7 +2,7 @@ ARG JENKINS_VERSION
 FROM jenkins/jenkins:${JENKINS_VERSION}
 
 
-COPY ../../devops-docker-tool-1.2.jar /opt/tapd_tool.jar
+COPY devops-docker-tool-1.2.jar /opt/tapd_tool.jar
 COPY --chown=jenkins:jenkins ./resource/ref /usr/share/jenkins/ref/
 COPY --chown=jenkins:jenkins script /usr/local/bin/
 
