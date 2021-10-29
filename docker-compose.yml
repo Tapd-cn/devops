@@ -12,7 +12,7 @@ services:
       - "${JENKINS_PORT}:8080"
       - "${JENKINS_AGENT_PORT}:50000"
     volumes:
-      - ${JENKINS_HOME}:/var/jenkins_home
+      - jenkins_data:/var/jenkins_home:rw
     restart: always
     environment:
       JAVA_OPTS: "-Duser.timezone=Asia/Shanghai"
@@ -22,16 +22,42 @@ services:
       TAPD_HOST: ${TAPD_HOST}
     networks:
       - default
-  jdk:
+  sonarqube:
+    image: sonarqube:${SONARQUBE_VERSION}
+    container_name: sonarqube
+    ports:
+      - "${SONAR_PORT}:9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube:rw
+    restart: always
+    environment:
+      TZ: "$TZ"
+    networks:
+      - default
+  nexus:
+    image: sonatype/nexus3:${NEXUS_VERSION}
+    container_name: nexus
+    ports:
+      - "${NEXUS_PORT}:8081"
+    volumes:
+      - nexus_data:/nexus-data:rw
+    restart: always
+    environment:
+      TZ: "$TZ"
+    networks:
+      - default
+  tapd:
     build:
-      context: ./services/jdk
+      context: ./services/tapd
       args:
         TZ: "$TZ"
         BASE_DATA_HOME: ${BASE_DATA_HOME}
-    container_name: jdk
-    volumes:
-      - ${BASE_DATA_HOME}:/data/devops_data
+    container_name: tapd
     restart: always
+    volumes:
+      - sonarqube_data:${SONARQUBE_HOME}
+      - jenkins_data:${JENKINS_HOME}
+      - nexus_data:${NEXUS_DATA}
     environment:
       TZ: "$TZ"
       JENKINS_HOME: ${JENKINS_HOME}
@@ -47,30 +73,10 @@ services:
       JENKINS_VERSION: ${JENKINS_VERSION}
       INIT_FILE: ${INIT_FILE}
       TAPD_HOST: ${TAPD_HOST}
+      HOST: ${HOST}
     networks:
       - default
-  sonarqube:
-    image: sonarqube:${SONARQUBE_VERSION}
-    container_name: sonarqube
-    ports:
-      - "${SONAR_PORT}:9000"
-    volumes:
-      - ${SONARQUBE_HOME}:/opt/sonarqube
-    restart: always
-    environment:
-      TZ: "$TZ"
-    networks:
-      - default
-  nexus:
-    image: sonatype/nexus3:${NEXUS_VERSION}
-    container_name: nexus
-    ports:
-      - "${NEXUS_PORT}:8081"
-    volumes:
-      - ${SONATYPE_DIR}:/opt/sonatype
-      - ${NEXUS_DATA}:/nexus-data
-    restart: always
-    environment:
-      TZ: "$TZ"
-    networks:
-      - default
+volumes:
+  nexus_data:
+  jenkins_data:
+  sonarqube_data:

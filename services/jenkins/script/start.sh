@@ -25,7 +25,6 @@ newJenkinsJobUuid=$(< /dev/urandom tr -dc 'A-Za-z0-9' | head -c32 )
 
 echo "generating new password of Jenkins admin account..."
 jenkinsInitPwd=$(tr </dev/urandom -dc 'A-Za-z0-9' | head -c32)
-echo $jenkinsInitPwd >/data/secrets/jenkinsInitialAdminPassword
 echo $jenkinsInitPwd >${JENKINS_HOME}/jenkinsInitialAdminPassword
 
 echo "save New Jenkins Admin Password"

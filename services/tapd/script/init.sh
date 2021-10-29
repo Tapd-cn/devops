@@ -8,7 +8,7 @@ source /usr/local/bin/addEnv.sh
 
 # set jenkins environment variable end
 echo "Waiting for initializing data... This may take some time ..."
-sleep 25s
+sleep 30s
 
 JenkinsPwd=$(cat ${JENKINS_HOME}/jenkinsInitialAdminPassword)
 oldNexusPwd=$(cat $NEXUS_DATA/admin.password)

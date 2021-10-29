@@ -20,12 +20,6 @@ fi
 
 /usr/local/bin/check.sh
 
-# init before jenkins start
-if [ ! -f "$INIT_FILE" ]; then
-  source /usr/local/bin/initBeforeJenkinsStart.sh > /data/logs/init.log
-  echo "init before jenkins start";
-fi
-
 #init 
 if [ ! -f "$INIT_FILE" ]; then
   source /usr/local/bin/init.sh >> /data/logs/init.log &
