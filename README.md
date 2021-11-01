@@ -1,17 +1,17 @@
-##使用Docker 多阶段构建
+## 使用Docker 多阶段构建
 
-##使用Tencent Kona JDK
+## 使用Tencent Kona JDK
 
-##Docker compose usage
+## Docker compose usage
 
-###configure
+### configure
 cp .env.example .env
 configure HOST and token
 
-###run
+### run
 docker-compose up -d
 
-###remove & flush data
+### remove & flush data
 docker-compose down -v
 
 
