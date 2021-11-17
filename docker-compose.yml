@@ -22,6 +22,9 @@ services:
       TAPD_HOST: ${TAPD_HOST}
     networks:
       - default
+    depends_on:
+      - sonarqube
+      - nexus
   sonarqube:
     image: sonarqube:${SONARQUBE_VERSION}
     container_name: sonarqube
@@ -58,6 +61,10 @@ services:
       - sonarqube_data:${SONARQUBE_HOME}
       - jenkins_data:${JENKINS_HOME}
       - nexus_data:${NEXUS_DATA}
+    depends_on:
+      - sonarqube
+      - nexus
+      - jenkins
     environment:
       TZ: "$TZ"
       JENKINS_HOME: ${JENKINS_HOME}
