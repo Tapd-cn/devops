@@ -1,8 +1,5 @@
 #! /bin/bash -e
 
-echo "waiting for jenkins starting fully..."
-sleep 15s
-
 # set jenkins environment variable
 source /usr/local/bin/addEnv.sh
 
@@ -44,7 +41,7 @@ echo $JenkinsApiToken > javiertest
 echo "generating credential for nexus...";
 CRUMB=$(curl -slL -u "admin:${JenkinsPwd}" $jenkinsCrumbTokenURL)
 curl -s -X POST -u "admin:${JenkinsApiToken}"  -H "${CRUMB}" $jenkinsCreateCredentialsURL --data-urlencode 'json={"":"0","credentials":{"scope":"GLOBAL","id":"DevOpsNexusPassword","username":"admin","password":"'"${nexusInitPwd}"'","description":"DevOpsNexusPassword","$class":"com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl"}}'
-sleep 5;
+sleep 5s;
 echo "adding Nexus configuration to jenkins ...";
 CRUMB=$(curl -slL -u "admin:${JenkinsPwd}" $jenkinsCrumbTokenURL)
 curl -slL -X POST -u "admin:${JenkinsApiToken}" -H "${CRUMB}" $jenkinsAddNexusCfgURL --data-urlencode "id=DevOpsNexus" --data-urlencode "displayName=DevOpsNexus" --data-urlencode "serverUrl=${NEXUS_SCHEME}://${HOST}:${NEXUS_PORT}" --data-urlencode "credentialsId=DevOpsNexusPassword"

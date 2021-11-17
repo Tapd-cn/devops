@@ -1,10 +1,5 @@
 #! /bin/bash -e
 
-echo "waiting for nexus starting fully..."
-sleep 10s
-echo "waiting for sonarqube starting fully..."
-sleep 10s
-
 # set jenkins environment variable
 source /usr/local/bin/addEnv.sh
 
