@@ -1,5 +1,5 @@
 ARG JENKINS_IMAGE=jenkins/jenkins:2.235.5-lts-alpine
-ARG SONARQUBE_IMAGE=sonarqube:8.9.0-community
+ARG SONARQUBE_IMAGE=sonarqube:8.9.1-community
 ARG NEXUS_IMAGE=sonatype/nexus3:3.26.1
 ARG JDK_IMAGE=ccr.ccs.tencentyun.com/tapd-devops/tencentkona11:1.0.0
 
@@ -40,6 +40,8 @@ ARG SONATYPE_DIR=$BASE_DATA_HOME/nexus_home
 ARG SONARQUBE_HOME=$BASE_DATA_HOME/sonarqube_home
 ARG NEXUS_HOME=$SONATYPE_DIR/nexus
 ARG INIT_FILE=$BASE_DATA_HOME/init_file
+ARG NEXUS_DEPLOY_FILE=$BASE_DATA_HOME/nexus_deploy_file
+ARG SONAR_DEPLOY_FILE=$BASE_DATA_HOME/sonar_deploy_file
 
 ENV JENKINS_HOME=$JENKINS_HOME \
     JENKINS_SLAVE_AGENT_PORT=${jenkins_agent_port} \
@@ -69,6 +71,8 @@ ENV TZ=Asia/Shanghai \
     LANGUAGE=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     INIT_FILE=${INIT_FILE} \
+    NEXUS_DEPLOY_FILE=${NEXUS_DEPLOY_FILE} \
+    SONAR_DEPLOY_FILE=${SONAR_DEPLOY_FILE} \
     SONARQUBE_HOME=${SONARQUBE_HOME} \
     SONATYPE_DIR=${SONATYPE_DIR} \
     NEXUS_HOME=${NEXUS_HOME} \

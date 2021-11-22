@@ -17,9 +17,13 @@ su-exec jenkins find "${REF}" \( -type f -o -type l \) -exec bash -c '. /usr/loc
 #if max < 262144 set it
 #sysctl -w vm.max_map_count=262144
 
+# rm nexus deploy file before nexus starting
+rm -f $NEXUS_DEPLOY_FILE
 # start nexus
 su-exec nexus /bin/bash -c "export RUN_AS_USER=nexus && cd $NEXUS_HOME && nohup bin/nexus run >/dev/null 2>&1 &"
 
+# rm sonar deploy file before sonar starting
+rm -f $SONAR_DEPLOY_FILE
 #start sonarqube
 su-exec sonarqube /bin/bash -c "cd $SONARQUBE_HOME && nohup $SONARQUBE_HOME/bin/sonar.sh >/dev/null 2>&1 &"
 
