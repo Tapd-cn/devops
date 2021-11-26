@@ -2,7 +2,7 @@ echo "waiting for nexus starting fully..."
 function waitNexus {
    while true;    
    do
-        nexusResponse=$(curl -w %{http_code} -s -o /dev/null $NEXUS_SCHEME://localhost:8081/service/rest/v1/status);
+        nexusResponse=$(curl -w %{http_code} -s -o /dev/null http://localhost:8081/service/rest/v1/status);
         echo "Now Nexus api status code is $nexusResponse";
         if [ $nexusResponse = "200" ];then
                if [ ! -f $NEXUS_DEPLOY_FILE ]; then
@@ -27,7 +27,7 @@ echo "waiting for sonarqube starting fully..."
 function waitSonar {
    while true;    
    do
-        sonarResponse=$(curl -u admin:admin -w %{http_code} -s -o /dev/null $SONAR_SCHEME://localhost:9000/api/system/health);
+        sonarResponse=$(curl -u admin:admin -w %{http_code} -s -o /dev/null http://localhost:9000/api/system/health);
         echo "Now Sonarqube api status code is $sonarResponse";
         if [ $sonarResponse = "200" ];then
                if [ ! -f $SONAR_DEPLOY_FILE ]; then
@@ -47,10 +47,6 @@ if [ ! -f $SONAR_DEPLOY_FILE ];then
         exit 1;
 fi;
 echo "Sonarqube deploy success..."
-
-
-# set jenkins environment variable
-source /usr/local/bin/addEnv.sh
 
 #modify demo workspaceId
 su-exec jenkins /bin/bash -c  "sed -i 's/<tapdWorkspaceId>xxx<\/tapdWorkspaceId>/<tapdWorkspaceId>$TAPD_WORKSPACE_ID<\/tapdWorkspaceId>/' /data/devops_data/jenkins_home/jobs/DemoPipeline/config.xml"

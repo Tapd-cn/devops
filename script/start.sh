@@ -36,6 +36,9 @@ fi
 
 /usr/local/bin/check.sh
 
+# set jenkins environment variable
+source /usr/local/bin/addEnv.sh
+
 # init before jenkins start
 if [ ! -f "$INIT_FILE" ]; then
   source /usr/local/bin/initBeforeJenkinsStart.sh > /data/devops_data/logs/init.log
