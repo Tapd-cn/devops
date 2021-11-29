@@ -52,7 +52,7 @@ cat cookies.txt
 echo "=======================part3 SHOW cookies.txt END"
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "=======================part4 generating JenkinsApiToken START"
-echo "curl -slL -u \"admin:${JenkinsPwd}\" $jenkinsCreateAPITokenURL \
+echo "curl -vlL -u \"admin:${JenkinsPwd}\" $jenkinsCreateAPITokenURL \
 -H \"${CRUMB}\" \
 --data 'newTokenName=devopsinit' \
 -b cookies.txt | sed -n -e 's/\"//gp' | sed -n -e 's/,/\n/gp'| grep tokenValue: | awk -F ':' '{print $2}'"
@@ -87,7 +87,7 @@ echo "${CRUMB}"
 echo "=======================part2 SHOW JENKINs CRUMB END"
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "=======================part3 generating JenkinsApiToken START"
-echo "curl -v -X POST -u \"admin:${JenkinsApiToken}\"  -H \"${CRUMB}\" $jenkinsCreateCredentialsURL --data-urlencode 'json={\"\":\"0\",\"credentials\":{\"scope\":\"GLOBAL\",\"id\":\"DevOpsNexusPassword\",\"username\":\"admin\",\"password\":\"'\"${nexusInitPwd\"'\",\"description\":\"DevOpsNexusPassword\",\"$class\":\"com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl\"}}'"
+echo "curl -v -X POST -u \"admin:${JenkinsApiToken}\"  -H \"${CRUMB}\" $jenkinsCreateCredentialsURL --data-urlencode 'json={"":"0","credentials":{"scope":"GLOBAL","id":"DevOpsNexusPassword","username":"admin","password":"'"${nexusInitPwd}"'","description":"DevOpsNexusPassword","$class":"com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl"}}'"
 curl -v -X POST -u "admin:${JenkinsApiToken}"  -H "${CRUMB}" $jenkinsCreateCredentialsURL --data-urlencode 'json={"":"0","credentials":{"scope":"GLOBAL","id":"DevOpsNexusPassword","username":"admin","password":"'"${nexusInitPwd}"'","description":"DevOpsNexusPassword","$class":"com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl"}}'
 echo "=======================part3 generating JenkinsApiToken END"
 echo ">>>>>>>>>>>>>>>>>>>>>>>EXECUTE credential for nexus END"
