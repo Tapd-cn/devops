@@ -20,6 +20,13 @@ services:
       TZ: "$TZ"
       TAPD_PLUGIN_VERSION: ${TAPD_PLUGIN_VERSION}
       TAPD_HOST: ${TAPD_HOST}
+      LANG: C.UTF-8
+      LANGUAGE: C.UTF-8
+      LC_ALL: C.UTF-8
+      SONAR_SCHEME: ${SONAR_SCHEME}
+      NEXUS_SCHEME: ${NEXUS_SCHEME}
+      SONAR_PORT: ${SONAR_PORT}
+      NEXUS_PORT: ${NEXUS_PORT}
     networks:
       - default
     depends_on:

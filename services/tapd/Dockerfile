@@ -2,6 +2,8 @@ FROM mirrors.tencent.com/tjdk/tencentkona11
 
 ARG TZ
 ARG BASE_DATA_HOME
+ARG NEXUS_DEPLOY_FILE=$BASE_DATA_HOME/nexus_deploy_file
+ARG SONAR_DEPLOY_FILE=$BASE_DATA_HOME/sonar_deploy_file
 
 COPY devops-docker-tool-1.2.jar /opt/tapd_tool.jar
 COPY --chown=root:root script /usr/local/bin/
