@@ -42,6 +42,9 @@ services:
     restart: always
     environment:
       TZ: "$TZ"
+      LANG: C.UTF-8
+      LANGUAGE: C.UTF-8
+      LC_ALL: C.UTF-8
     networks:
       - default
   nexus:
@@ -54,6 +57,9 @@ services:
     restart: always
     environment:
       TZ: "$TZ"
+      LANG: C.UTF-8
+      LANGUAGE: C.UTF-8
+      LC_ALL: C.UTF-8
     networks:
       - default
   tapd:
@@ -88,6 +94,9 @@ services:
       INIT_FILE: ${INIT_FILE}
       TAPD_HOST: ${TAPD_HOST}
       HOST: ${HOST}
+      LANG: C.UTF-8
+      LANGUAGE: C.UTF-8
+      LC_ALL: C.UTF-8
     networks:
       - default
 volumes:

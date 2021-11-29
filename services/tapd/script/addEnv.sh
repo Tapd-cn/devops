@@ -1,4 +1,6 @@
 #! /bin/bash -e
+export LANG=C.UTF-8
+
 tapdAuthPre="${TAPD_HOST}/devops/auth/index/"
 
 tapdAuthInfo=$(curl -s $tapdAuthPre$token)
