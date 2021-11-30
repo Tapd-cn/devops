@@ -1,11 +1,32 @@
 #! /bin/bash -e
 
 echo "waiting for jenkins starting fully..."
-sleep 20s
 
 # set jenkins environment variable end
 echo "Waiting for initializing data... This may take some time ..."
-sleep 30s
+function waitJenkins {
+   while true;    
+   do
+        JenkinsResponse=$(curl -w %{http_code} -s -o /dev/null http://localhost:8080/metrics/tapd-metrics/healthcheck);
+        echo "Now Jenkins healthcheck status code is $JenkinsResponse";
+        if [ $JenkinsResponse = "200" ];then
+               if [ ! -f $JENKINS_DEPLOY_FILE ]; then
+                    touch $JENKINS_DEPLOY_FILE
+               fi;
+               break;
+        fi;
+        echo "Waiting Jenkins starting...";
+        sleep 3;
+   done
+}
+export -f waitJenkins
+timeout 600s /bin/bash -c waitJenkins
+
+if [ ! -f $JENKINS_DEPLOY_FILE ];then
+        echo "Jenkins deploy fail(timeout)";
+        exit 1;
+fi;
+echo "Jenkins deploy success..."
 
 JenkinsPwd=$(cat /data/devops_data/secrets/jenkinsInitialAdminPassword)
 oldNexusPwd=$(cat $NEXUS_DATA/admin.password)
