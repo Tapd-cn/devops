@@ -47,6 +47,8 @@ fi
 
 #start jenkins
 echo "start jenkins ...";
+# rm jenkins deploy file before jenkins starting
+rm -f $JENKINS_DEPLOY_FILE
 su-exec jenkins /bin/bash -c "mkdir -p $JENKINS_HOME/logs && nohup java -Djava.net.useSystemProxies=true -jar $JENKINS_WAR > $JENKINS_HOME/logs/run.log 2>&1 &"
 echo "jenkins is started";
 
