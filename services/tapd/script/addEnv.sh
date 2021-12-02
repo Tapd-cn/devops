@@ -1,5 +1,7 @@
 #! /bin/bash -e
 export LANG=C.UTF-8
+export LANGUAGE=C.UTF-8
+export LC_ALL=C.UTF-8
 
 tapdAuthPre="${TAPD_HOST}/devops/auth/index/"
 
