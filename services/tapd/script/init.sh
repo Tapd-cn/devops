@@ -112,6 +112,7 @@ curl -slL -u admin:admin -X POST -d "login=admin&password=${sonarqubeInitPwd}&pr
 echo $sonarqubeInitPwd >/data/secrets/sonarInitialAdminPassword
 
 echo "configuring tapd plugin...";
+echo "jenkins name:${JENKINS_NAME}"
 /user/share/jvm/TencentKona-8.0.0-232/bin/java -Dfile.encoding=UTF-8 -Djava.net.useSystemProxies=true -jar /opt/tapd_tool.jar config-tapd --jenkinsHost="${JENKINS_SCHEME}://jenkins:${JENKINS_PORT}" --username="admin" --password="${JenkinsPwd}"
 
 echo "save DemoPiepline";
