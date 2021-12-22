@@ -25,7 +25,7 @@ su-exec nexus /bin/bash -c "export RUN_AS_USER=nexus && cd $NEXUS_HOME && nohup 
 # rm sonar deploy file before sonar starting
 rm -f $SONAR_DEPLOY_FILE
 #start sonarqube
-su-exec sonarqube /bin/bash -c "cd $SONARQUBE_HOME && nohup $SONARQUBE_HOME/bin/sonar.sh >/dev/null 2>&1 &"
+su-exec sonarqube /bin/bash -c "cd $SONARQUBE_HOME && nohup $SONARQUBE_HOME/bin/run.sh $SONARQUBE_HOME/bin/sonar.sh >/dev/null 2>&1 &"
 
 # touch init log
 mkdir -p /data/devops_data/secrets/

@@ -1,5 +1,5 @@
 ARG JENKINS_IMAGE=jenkins/jenkins:2.235.5-lts-alpine
-ARG SONARQUBE_IMAGE=sonarqube:8.9.1-community
+ARG SONARQUBE_IMAGE=sonarqube:8.9.5-community
 ARG NEXUS_IMAGE=sonatype/nexus3:3.26.1
 ARG JDK_IMAGE=ccr.ccs.tencentyun.com/tapd-devops/tencentkona11:1.0.0
 
@@ -80,7 +80,7 @@ ENV TZ=Asia/Shanghai \
     JENKINS_PORT=8080 \
     JENKINS_VERSION=2.235.5 \
     SONAR_PORT=9000 \
-    SONAR_VERSION=8.9.1.44547 \
+    SONAR_VERSION=8.9.5.50698 \
     NEXUS_PORT=8081 \
     NEXUS_DATA=$SONATYPE_DIR/nexus-data \
     NEXUS_CONTEXT=''  \
