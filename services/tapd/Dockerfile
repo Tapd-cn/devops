@@ -1,4 +1,4 @@
-FROM mirrors.tencent.com/tjdk/tencentkona11
+FROM ccr.ccs.tencentyun.com/tapd-devops/tencentkona11:1.0.0
 
 ARG TZ
 ARG BASE_DATA_HOME
