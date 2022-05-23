@@ -6,7 +6,7 @@ export LC_ALL=C.UTF-8
 
 tapdAuthPre="${TAPD_HOST}/devops/auth/index/"
 
-tapdAuthInfo=$(curl -s $tapdAuthPre$token)
+tapdAuthInfo=$(curl -k -s $tapdAuthPre$token)
 if [ -z $tapdAuthInfo ] || [ $tapdAuthInfo == "error" ]; then
     echo "TAPD auth faild"
     exit 1
