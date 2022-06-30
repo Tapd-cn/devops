@@ -15,7 +15,7 @@ services:
       - jenkins_data:/var/jenkins_home:rw
     restart: always
     environment:
-      JAVA_OPTS: "-Duser.timezone=Asia/Shanghai -Dfile.encoding=UTF-8 -Djava.net.useSystemProxies=true"
+      JAVA_OPTS: "-Duser.timezone=Asia/Shanghai -Dfile.encoding=${JAVA_ENCODING} -Djava.net.useSystemProxies=true"
       token: ${token}
       TZ: "$TZ"
       TAPD_PLUGIN_VERSION: ${TAPD_PLUGIN_VERSION}
