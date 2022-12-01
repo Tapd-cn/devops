@@ -4,7 +4,7 @@ echo "waiting for nexus starting fully..."
 function waitNexus {
    while true;
    do
-        nexusResponse=$(curl -w %{http_code} -s -o /dev/null ${NEXUS_SCHEME}://nexus:${NEXUS_PORT}/service/rest/v1/status);
+        nexusResponse=$(curl -w %{http_code} -s -o /dev/null ${NEXUS_SCHEME}://nexus:8081/service/rest/v1/status);
         echo "Now Nexus api status code is $nexusResponse";
         if [ $nexusResponse = "200" ];then
                if [ ! -f $NEXUS_DEPLOY_FILE ]; then
@@ -30,7 +30,7 @@ echo "waiting for sonarqube starting fully..."
 function waitSonar {
    while true;
    do
-        sonarResponse=$(curl -u admin:admin -w %{http_code} -s -o /dev/null ${SONAR_SCHEME}://sonarqube:${SONAR_PORT}/api/system/health);
+        sonarResponse=$(curl -u admin:admin -w %{http_code} -s -o /dev/null ${SONAR_SCHEME}://sonarqube:9000/api/system/health);
         echo "Now Sonarqube api status code is $sonarResponse";
         if [ $sonarResponse = "200" ];then
                if [ ! -f $SONAR_DEPLOY_FILE ]; then
@@ -63,16 +63,16 @@ JenkinsPwd=$(cat ${JENKINS_HOME}/jenkinsInitialAdminPassword)
 oldNexusPwd=$(cat $NEXUS_DATA/admin.password)
 
 # generate url
-jenkinsCrumbTokenURL=$JENKINS_SCHEME://jenkins:$JENKINS_PORT/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\)
-jenkinsCreateAPITokenURL=$JENKINS_SCHEME://jenkins:$JENKINS_PORT/user/admin/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken
-jenkinsCreateCredentialsURL=$JENKINS_SCHEME://jenkins:$JENKINS_PORT/credentials/store/system/domain/_/createCredentials
-jenkinsAddNexusCfgURL=$JENKINS_SCHEME://jenkins:$JENKINS_PORT/tapd-devops-init/nexus
-jenkinsAddSonarqubeCfgURL=$JENKINS_SCHEME://jenkins:$JENKINS_PORT/tapd-devops-init/sonar
-jenkinsDemoPipelineBuildURL=$JENKINS_SCHEME://jenkins:$JENKINS_PORT/job/DemoPipeline/tapdbuild/build
-nexusChangePwdURL=$NEXUS_SCHEME://nexus:$NEXUS_PORT/service/rest/v1/security/users/admin/change-password
-sonarqubeRevokeTokenURL=$SONAR_SCHEME://sonarqube:$SONAR_PORT/api/user_tokens/revoke
-sonarqubeGenerateTokenURL=$SONAR_SCHEME://sonarqube:$SONAR_PORT/api/user_tokens/generate
-sonarqubeChangePwdURL=$SONAR_SCHEME://sonarqube:$SONAR_PORT/api/users/change_password
+jenkinsCrumbTokenURL=$JENKINS_SCHEME://jenkins:8080/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\)
+jenkinsCreateAPITokenURL=$JENKINS_SCHEME://jenkins:8080/user/admin/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken
+jenkinsCreateCredentialsURL=$JENKINS_SCHEME://jenkins:8080/credentials/store/system/domain/_/createCredentials
+jenkinsAddNexusCfgURL=$JENKINS_SCHEME://jenkins:8080/tapd-devops-init/nexus
+jenkinsAddSonarqubeCfgURL=$JENKINS_SCHEME://jenkins:8080/tapd-devops-init/sonar
+jenkinsDemoPipelineBuildURL=$JENKINS_SCHEME://jenkins:8080/job/DemoPipeline/tapdbuild/build
+nexusChangePwdURL=$NEXUS_SCHEME://nexus:8081/service/rest/v1/security/users/admin/change-password
+sonarqubeRevokeTokenURL=$SONAR_SCHEME://sonarqube:9000/api/user_tokens/revoke
+sonarqubeGenerateTokenURL=$SONAR_SCHEME://sonarqube:9000/api/user_tokens/generate
+sonarqubeChangePwdURL=$SONAR_SCHEME://sonarqube:9000/api/users/change_password
 
 echo "generating new password of Nexus admin account...";
 nexusInitPwd=$(< /dev/urandom tr -dc 'A-Za-z0-9' | head -c32 )
@@ -113,7 +113,7 @@ echo $sonarqubeInitPwd >/data/secrets/sonarInitialAdminPassword
 
 echo "configuring tapd plugin...";
 echo "jenkins name:${JENKINS_NAME}"
-/user/share/jvm/TencentKona-8.0.0-232/bin/java -Dfile.encoding=UTF-8 -Djava.net.useSystemProxies=true -jar /opt/tapd_tool.jar config-tapd --jenkinsHost="${JENKINS_SCHEME}://jenkins:${JENKINS_PORT}" --username="admin" --password="${JenkinsPwd}"
+/user/share/jvm/TencentKona-8.0.0-232/bin/java -Dfile.encoding=UTF-8 -Djava.net.useSystemProxies=true -jar /opt/tapd_tool.jar config-tapd --jenkinsHost="${JENKINS_SCHEME}://jenkins:8080" --username="admin" --password="${JenkinsPwd}"
 
 echo "save DemoPiepline";
 currentTime=$(date +%s000)

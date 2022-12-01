@@ -4,7 +4,7 @@ echo "waiting for nexus starting fully..."
 function waitNexus {
    while true;
    do
-        nexusResponse=$(curl -w %{http_code} -s -o /dev/null ${NEXUS_SCHEME}://nexus:${NEXUS_PORT}/service/rest/v1/status);
+        nexusResponse=$(curl -w %{http_code} -s -o /dev/null ${NEXUS_SCHEME}://nexus:8081/service/rest/v1/status);
         echo "Now Nexus api status code is $nexusResponse";
         if [ $nexusResponse = "200" ];then
                if [ ! -f $NEXUS_DEPLOY_FILE ]; then
@@ -30,7 +30,7 @@ echo "waiting for sonarqube starting fully..."
 function waitSonar {
    while true;
    do
-        sonarResponse=$(curl -u admin:admin -w %{http_code} -s -o /dev/null ${SONAR_SCHEME}://sonarqube:${SONAR_PORT}/api/system/health);
+        sonarResponse=$(curl -u admin:admin -w %{http_code} -s -o /dev/null ${SONAR_SCHEME}://sonarqube:9000/api/system/health);
         echo "Now Sonarqube api status code is $sonarResponse";
         if [ $sonarResponse = "200" ];then
                if [ ! -f $SONAR_DEPLOY_FILE ]; then
