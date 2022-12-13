@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-init-scripts
+  labels:
+    app: jenkins
+    service: devops  
+data:
+  1-create-user-admin.groovy: |-
+    import jenkins.model.*
+    import hudson.security.*
+    // Required plugins: 
+    // (none)
+    //
+    println "execute 1-create-user-admin.groovy"
+    def instance = Jenkins.getInstance()
+    def hudsonRealm = new HudsonPrivateSecurityRealm(false)
+    hudsonRealm.createAccount(System.getenv("jenkins_user"),System.getenv("jenkins_user_password"))
+    instance.setSecurityRealm(hudsonRealm)
+    def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
+    instance.setAuthorizationStrategy(strategy)
+    instance.save()
+  2-create-sonar-nexus-credentials.groovy: |-
+    import com.cloudbees.plugins.credentials.impl.*
+    import com.cloudbees.plugins.credentials.*
+    import com.cloudbees.plugins.credentials.domains.*
+    import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl
+    import groovy.json.JsonSlurper
+    import hudson.util.Secret
+    import hudson.AbortException
+    // Required plugins: 
+    // sonar
+    // nexus
+    // plain-credentials
+    //
+    println "3-create-sonar-nexus-credentials.groovy"
+    // revoking SonarQube token
+    def revokePost = new URL(System.getenv("sonar_host") + ":" + System.getenv("sonar_port") +"/api/user_tokens/revoke").openConnection();
+    def message = "login="+System.getenv("sonarqube_user")+"&name=jenkins"
+    def basicAuth = System.getenv("sonarqube_user")+":"+System.getenv("sonarqube_user_password")
+    String encodedBasicAuth = basicAuth.bytes.encodeBase64().toString()
+    revokePost.setRequestMethod("POST")
+    revokePost.setDoOutput(true)
+    revokePost.setRequestProperty("Authorization", "Basic " + encodedBasicAuth)
+    revokePost.getOutputStream().write(message.getBytes("UTF-8"));
+    def revokePostRC = revokePost.getResponseCode();
+    if(!revokePostRC.equals(204)) {
+      throw new AbortException("revoke sonarqube faild")
+    }
+
+    // generating SonarQube token
+    def generatePost = new URL(System.getenv("sonar_host") + ":" + System.getenv("sonar_port") +"/api/user_tokens/generate").openConnection();
+    generatePost.setRequestMethod("POST")
+    generatePost.setDoOutput(true)
+    generatePost.setRequestProperty("Authorization", "Basic " + encodedBasicAuth)
+    generatePost.getOutputStream().write(message.getBytes("UTF-8"));
+    def generatePostRC = generatePost.getResponseCode();
+    if(generatePostRC.equals(200)) {
+        def jsonSlurper = new JsonSlurper()
+        def object = jsonSlurper.parseText(generatePost.getInputStream().getText())
+        System.setProperty("sonarqube_user_token", object.token)    
+    }else{
+      throw new AbortException("generate sonarqube faild")
+    }
+
+    //add credentials
+    Credentials nexusCredentials = (Credentials) new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,"DevOpsNexusPassword", "DevOpsNexusPassword", System.getenv("nexus_user"), System.getenv("nexus_user_password"))
+    Credentials sonarCredentials = (Credentials) new StringCredentialsImpl(CredentialsScope.GLOBAL,"DevOpsSonarQubeToken", "DevOpsSonarQubeToken", Secret.fromString(System.getProperty("sonarqube_user_token")))
+    SystemCredentialsProvider.getInstance().getStore().addCredentials(Domain.global(), nexusCredentials)
+    SystemCredentialsProvider.getInstance().getStore().addCredentials(Domain.global(), sonarCredentials)
+  3-create-sonar-nexus-system-config.groovy: |-
+    import hudson.ExtensionList
+    import org.sonatype.nexus.ci.config.GlobalNexusConfiguration
+    import org.sonatype.nexus.ci.config.Nxrm3Configuration
+    import org.sonatype.nexus.ci.config.NxrmConfiguration
+    import hudson.plugins.sonar.SonarGlobalConfiguration
+    import hudson.plugins.sonar.SonarInstallation
+    // Required plugins: 
+    // sonar
+    // nexus
+    //
+    println "3-create-sonar-nexus-system-config.groovy"
+
+    doNexus()
+    doSonar()
+
+    def doNexus() {
+      String id = "DevOpsNexus"
+      String displayName = "DevOpsNexus"
+      String serverUrl = System.getenv("nexus_host") + ":" + System.getenv("nexus_port")
+      String credentialsId = "DevOpsNexusPassword"
+      GlobalNexusConfiguration globalNexusConfiguration = ExtensionList.lookupSingleton(GlobalNexusConfiguration)
+      Nxrm3Configuration nxrm3Configuration = new Nxrm3Configuration(id, UUID.randomUUID().toString(), displayName, serverUrl, credentialsId)
+      List<NxrmConfiguration> nxrmConfigurationList = new ArrayList<>()
+      nxrmConfigurationList.add(nxrm3Configuration)
+      globalNexusConfiguration.setNxrmConfigs(nxrmConfigurationList)
+      globalNexusConfiguration.save()
+    }
+    def doSonar() {
+      String id = "DevOpsSonarQube"
+      String displayName = "DevOpsSonarQube"
+      String serverUrl = System.getenv("sonar_host") + ":" + System.getenv("sonar_port")
+      String credentialsId = "DevOpsSonarQubeToken"
+      SonarGlobalConfiguration sonarGlobalConfiguration = ExtensionList.lookupSingleton(SonarGlobalConfiguration)
+      SonarInstallation newInstanceItem = new SonarInstallation(id, serverUrl, credentialsId, null, "", "", "", "", null)
+      SonarInstallation[] sonarInstallations = [newInstanceItem]
+      sonarGlobalConfiguration.setInstallations(sonarInstallations)
+    }

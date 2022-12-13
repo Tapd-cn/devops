@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarqube
+  labels:
+    app: sonarqube
+    service: devops
+spec:
+  type: LoadBalancer
+  ports:
+    - name: 9000-http
+      port: 9000
+      targetPort: 9000
+  selector:
+    app: sonarqube
+    service: devops

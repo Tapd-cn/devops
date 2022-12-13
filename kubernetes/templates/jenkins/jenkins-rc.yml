@@ -1,0 +1,166 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: jenkins
+  labels:
+    app: jenkins
+    service: devops
+spec:
+  serviceName: jenkins
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+      service: devops
+  template:
+    metadata:
+      name: jenkins
+      labels:
+        app: jenkins
+        service: devops
+    spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+        runAsNonRoot: true    
+      initContainers:
+        - name: kona-jdk-init
+          image: ccr.ccs.tencentyun.com/tapd-devops/tencentkona11:1.0.0
+          imagePullPolicy: IfNotPresent
+          command: ["cp", "-r", "/opt/java/openjdk", "/kona"]
+          volumeMounts:
+            - name: kona-java-home
+              mountPath: /kona
+        - name: init
+          image: jenkins/jenkins:lts
+          imagePullPolicy: IfNotPresent
+          securityContext: 
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          command: [ "sh", "/var/jenkins_config/apply_config.sh" ]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 2000m
+              memory: 4096Mi
+          volumeMounts:
+            - mountPath: /var/jenkins_home
+              name: jenkins-home
+            - mountPath: /var/jenkins_config
+              name: jenkins-config
+            - mountPath: /usr/share/jenkins/ref/plugins
+              name: plugins
+            - mountPath: /var/jenkins_plugins
+              name: plugin-dir
+            - mountPath: /tmp
+              name: tmp-volume
+            - mountPath: /var/jenkins_home/init.groovy.d
+              name: init-scripts              
+      containers:
+        - name: jenkins
+          image: jenkins/jenkins:lts
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          args: [ "--httpPort=8080"]
+          envFrom:
+            - secretRef:
+                name: jenkins
+            - secretRef:
+                name: sonarqube
+            - secretRef:
+                name: nexus
+          env:
+            - name: JAVA_OPTS
+              value: "-Djenkins.install.runSetupWizard=false"
+            - name: JENKINS_OPTS
+              value: "--webroot=/var/jenkins_cache/war"
+            - name: JENKINS_SLAVE_AGENT_PORT
+              value: "50000"
+            - name: sonar_host
+              value: "http://sonarqube"
+            - name: sonar_port
+              value: "9000"
+            - name: nexus_host
+              value: "http://nexus"
+            - name: nexus_port
+              value: "8081"
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 50000
+              name: agent-listener
+          startupProbe:
+            httpGet:
+              path: /login
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /login
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /login
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "256Mi"
+            limits:
+              cpu: "2000m"
+              memory: "4096Mi"
+          volumeMounts:
+            - mountPath: /var/jenkins_home
+              name: jenkins-home
+              readOnly: false
+            - mountPath: /var/jenkins_config
+              name: jenkins-config
+              readOnly: true
+            - mountPath: /usr/share/jenkins/ref/plugins/
+              name: plugin-dir
+              readOnly: false
+            - mountPath: /var/jenkins_home/init.groovy.d
+              name: init-scripts
+            - name: jenkins-cache
+              mountPath: /var/jenkins_cache
+            - mountPath: /tmp
+              name: tmp-volume
+            - mountPath: /opt/java
+              name: kona-java-home
+      volumes:
+      - name: plugins
+        emptyDir: {}
+      - name: init-scripts
+        projected:
+          sources:
+          - configMap:
+              name: jenkins-init-scripts
+      - name: jenkins-config
+        configMap:
+          name: jenkins-config
+      - name: plugin-dir
+        emptyDir: {}
+      - name: jenkins-cache
+        emptyDir: {}
+      - name: jenkins-home
+        emptyDir: {}
+      - name: tmp-volume
+        emptyDir: {}
+      - name: kona-java-home
+        emptyDir: {}

@@ -1,0 +1,107 @@
+version: "3"
+services:
+  jenkins:
+    build:
+      context: ./
+      dockerfile: ./docker-compose/services/jenkins/Dockerfile    
+      args:
+        JENKINS_VERSION: ${JENKINS_VERSION}
+        GIT_LFS_VERSION: ${GIT_LFS_VERSION}
+        TZ: "$TZ"
+    container_name: jenkins
+    ports:
+      - "${JENKINS_PORT}:8080"
+      - "${JENKINS_AGENT_PORT}:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home:rw
+    restart: always
+    environment:
+      JAVA_OPTS: "-Duser.timezone=Asia/Shanghai -Dfile.encoding=${JAVA_ENCODING} -Djava.net.useSystemProxies=true"
+      token: ${token}
+      TZ: "$TZ"
+      TAPD_PLUGIN_VERSION: ${TAPD_PLUGIN_VERSION}
+      TAPD_HOST: ${TAPD_HOST}
+      LANG: "C.${JAVA_ENCODING}"
+      LANGUAGE: "C.${JAVA_ENCODING}"
+      LC_ALL: "C.${JAVA_ENCODING}"
+      SONAR_SCHEME: ${SONAR_SCHEME}
+      NEXUS_SCHEME: ${NEXUS_SCHEME}
+      SONAR_PORT: ${SONAR_PORT}
+      NEXUS_PORT: ${NEXUS_PORT}
+    networks:
+      - default
+    depends_on:
+      - sonarqube
+      - nexus
+  sonarqube:
+    image: sonarqube:${SONARQUBE_VERSION}
+    container_name: sonarqube
+    ports:
+      - "${SONAR_PORT}:9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube:rw
+    restart: always
+    environment:
+      TZ: "$TZ"
+      LANG: C.UTF-8
+      LANGUAGE: C.UTF-8
+      LC_ALL: C.UTF-8
+    networks:
+      - default
+  nexus:
+    image: sonatype/nexus3:${NEXUS_VERSION}
+    container_name: nexus
+    ports:
+      - "${NEXUS_PORT}:8081"
+    volumes:
+      - nexus_data:/nexus-data:rw
+    restart: always
+    environment:
+      TZ: "$TZ"
+      LANG: C.UTF-8
+      LANGUAGE: C.UTF-8
+      LC_ALL: C.UTF-8
+    networks:
+      - default
+  tapd:
+    build:
+      context: ./
+      dockerfile: ./docker-compose/services/tapd/Dockerfile        
+      args:
+        TZ: "$TZ"
+        BASE_DATA_HOME: ${BASE_DATA_HOME}
+    container_name: tapd
+    restart: always
+    volumes:
+      - sonarqube_data:${SONARQUBE_HOME}
+      - jenkins_data:${JENKINS_HOME}
+      - nexus_data:${NEXUS_DATA}
+    depends_on:
+      - sonarqube
+      - nexus
+      - jenkins
+    environment:
+      TZ: "$TZ"
+      JENKINS_HOME: ${JENKINS_HOME}
+      NEXUS_DATA: ${NEXUS_DATA}
+      JENKINS_SCHEME: ${JENKINS_SCHEME}
+      SONAR_SCHEME: ${SONAR_SCHEME}
+      NEXUS_SCHEME: ${NEXUS_SCHEME}
+      JENKINS_PORT: ${JENKINS_PORT}
+      SONAR_PORT: ${SONAR_PORT}
+      NEXUS_PORT: ${NEXUS_PORT}
+      token: ${token}
+      TAPD_PLUGIN_VERSION: ${TAPD_PLUGIN_VERSION}
+      JENKINS_VERSION: ${JENKINS_VERSION}
+      INIT_FILE: ${INIT_FILE}
+      TAPD_HOST: ${TAPD_HOST}
+      HOST: ${HOST}
+      LANG: C.UTF-8
+      LANGUAGE: C.UTF-8
+      LC_ALL: C.UTF-8
+    networks:
+      - default
+volumes:
+  nexus_data:
+  jenkins_data:
+  sonarqube_data:

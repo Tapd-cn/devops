@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarqube
+  labels:
+    app: sonarqube
+    service: devops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonarqube
+      service: devops
+  template:
+    metadata:
+      name: sonarqube
+      labels:
+        app: sonarqube
+        service: devops
+    spec:
+      initContainers:
+        - name: kona-jdk-init
+          image: ccr.ccs.tencentyun.com/tapd-devops/tencentkona11:1.0.0
+          imagePullPolicy: IfNotPresent
+          command: ["cp", "-r", "/opt/java/openjdk", "/kona"]
+          volumeMounts:
+            - name: kona-java-home
+              mountPath: /kona    
+      containers:
+      - name: sonarqube
+        image: sonarqube:8.9.5-community
+        env:
+        - name: TZ
+          value: Asia/Shanghai
+        - name: LANG
+          value: C.UTF-8
+        - name: LANGUAGE
+          value: C.UTF-8
+        - name: LC_ALL
+          value: C.UTF-8
+        ports:
+        - name: 9000-http
+          containerPort: 9000
+        volumeMounts:
+        - mountPath: /opt/sonarqube/data
+          name: sonarqube
+          subPath: data
+        - mountPath: /opt/sonarqube/temp
+          name: sonarqube
+          subPath: temp
+        - mountPath: /opt/sonarqube/logs
+          name: sonarqube
+          subPath: logs
+        - mountPath: /tmp
+          name: tmp-dir
+        - mountPath: /opt/java
+          name: kona-java-home
+        livenessProbe:
+          httpGet:
+            path: /api/system/status
+            port: 9000-http
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /api/system/status
+            port: 9000-http
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          failureThreshold: 6  
+      volumes:
+      - name: sonarqube
+        emptyDir: {}
+      - name : tmp-dir
+        emptyDir: {}
+      - name: kona-java-home
+        emptyDir: {}        

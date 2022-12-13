@@ -1,0 +1,11 @@
+matrix-auth
+sonar
+nexus-jenkins-plugin
+credentials
+plain-credentials
+workflow-aggregator
+pipeline-graph-analysis
+script-security
+scm-api
+git
+subversion

@@ -1,0 +1,55 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tapd
+  labels:
+    app: tapd
+    service: devops
+spec:
+  template:
+    metadata:
+      name: tapd
+      labels:
+        app: tapd
+        service: devops
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+      - name: copy-ro-scripts
+        image: busybox
+        imagePullPolicy: IfNotPresent        
+        command: ['sh', '-c', 'cp /tapd-config/* /etc/tapd-scripts/']
+        volumeMounts:
+          - name: tapd-config
+            mountPath: /tapd-config
+          - name: tapd-scripts
+            mountPath: /etc/tapd-scripts
+      containers:
+      - name: tapd
+        image: "curlimages/curl:latest"
+        imagePullPolicy: IfNotPresent
+        workingDir: /etc/tapd-scripts           
+        command: [ "sh", "/etc/tapd-scripts/start.sh" ]
+        envFrom:
+          - secretRef:
+              name: jenkins
+        env:
+          - name: jenkins_host
+            value: "http://jenkins"
+          - name: jenkins_port
+            value: "8080"    
+          - name: jenkins_visit_address
+            value: "http://jenkins.tiger.oa.com"
+          - name: tapd_auth_url
+            value: "http://tiger.oa.com/tapd3_cloud/devops/auth/index/"
+          - name: tapd_auth_secret
+            value: "74e708c2396cd194b21ea62833af2f08"                        
+        volumeMounts:
+          - mountPath: /etc/tapd-scripts
+            name: tapd-scripts
+      volumes:
+      - name: tapd-config
+        configMap:
+          name: tapd-config
+      - name: tapd-scripts
+        emptyDir: {}

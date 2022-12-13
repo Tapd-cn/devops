@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexus
+  labels:
+    app: nexus
+    service: devops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nexus
+      service: devops
+  template:
+    metadata:
+      name: nexus
+      labels:
+        app: nexus
+        service: devops
+    spec:
+      initContainers:
+        - name: kona-jdk-init
+          image: mirrors.tencent.com/tjdk/tencentkona8-tlinux
+          imagePullPolicy: IfNotPresent
+          command: ["cp", "-r", "/opt/jdk", "/kona"]
+          volumeMounts:
+            - name: kona-java-home
+              mountPath: /kona
+      containers:
+      - name: nexus
+        image: sonatype/nexus3:3.38.1
+        env:
+        - name: TZ
+          value: Asia/Shanghai
+        - name: LANG
+          value: C.UTF-8
+        - name: LANGUAGE
+          value: C.UTF-8
+        - name: LC_ALL
+          value: C.UTF-8
+        - name: INSTALL4J_JAVA_HOME_OVERRIDE
+          value: /opt/java/jdk
+        - name: INSTALL4J_ADD_VM_PARAMS
+          value: |-
+            -Xms2703M -Xmx2703M
+            -XX:MaxDirectMemorySize=2703M
+            -XX:+UnlockExperimentalVMOptions
+            -XX:+UseCGroupMemoryLimitForHeap
+            -Djava.util.prefs.userRoot=/nexus-data/javaprefs
+        ports:
+        - name: 8081-http
+          containerPort: 8081
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8081-http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          failureThreshold: 6
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8081-http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          failureThreshold: 6
+          timeoutSeconds: 10
+        volumeMounts:
+        - name: nexus-data
+          mountPath: /nexus-data
+        - name: kona-java-home
+          mountPath: /opt/java
+      volumes:
+      - name: nexus-data
+        emptyDir: {}
+      - name: kona-java-home
+        emptyDir: {}        

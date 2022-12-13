@@ -1,25 +1,25 @@
-## Intro
+# Intro
 从零开始安装配置Jenkins、SonarQube、Nexus等相关工具是一件比较复杂的事，有没有什么办法可以跳过繁琐的环境搭建，直接体验强大的Devops流水线呢？现在你只需安装好 Docker-CE ，就可以使用Devops镜像一键搭建好这些集成工具了。
 
-## Feature 
+# Feature 
 - 使用Docker 多阶段构建
 - 使用Tencent Kona JDK
 - 参数化构建，各组件版本可控
 - 预留端口可供服务扩展
 - 一键安装，自动配置
-## Usage
-
-### build
+# Usage
+## All In One Image
+### Build
 ```
 docker build \
 --build-arg JENKINS_IMAGE=jenkins/jenkins:2.235.5-lts-alpine \
 --build-arg SONARQUBE_IMAGE=sonarqube:8.9.0-community \
 --build-arg NEXUS_IMAGE=sonatype/nexus3:3.26.1 \
- -t ${IMAGE_NAME} .
+ -t ${IMAGE_NAME} -f all_in_one/Dockerfile .
 
 ```
 
-### run
+### Run
 ```
 docker run \
 -e HOST=${HOST} \
@@ -48,12 +48,12 @@ docker run \
 | JENKINS_AGENT_PORT   | 你的JENKINS_AGENT(可选)的端口，默认50000  |
 
 
-#### init log
+#### Init Log
 ```
 docker logs -f ${CONTAINER_NAME}
 ```
 
-### secrets
+### Secrets
 ```
 #cat jenkins password
 docker exec -it ${CONTAINER_NAME} cat /data/devops_data/secrets/jenkinsInitialAdminPassword
@@ -65,10 +65,27 @@ docker exec -it ${CONTAINER_NAME} cat /data/devops_data/secrets/sonarInitialAdmi
 docker exec -it ${CONTAINER_NAME} cat /data/devops_data/secrets/nexusInitialAdminPassword
 ```
 
-### access
+### Access
 
 - jenkins: ${HOST}:{JENKINS_PORT}
 
 - sonar: ${HOST}:{SONAR_PORT}
 
 - nexus: ${HOST}:{NEXUS_PORT}
+
+## Docker Compose
+### Configure
+```
+cp docker-compose/.env.example .env
+# then configure HOST and token
+```
+
+### Run
+```
+docker-compose -f docker-compose/docker-compose.yml --project-directory ./ up --build -d
+```
+
+### Remove & Flush Data
+```
+docker-compose -f docker-compose/docker-compose.yml --project-directory ./ down -v
+```
