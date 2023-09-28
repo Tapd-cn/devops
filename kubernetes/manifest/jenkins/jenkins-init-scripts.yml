@@ -33,7 +33,7 @@ data:
     // nexus
     // plain-credentials
     //
-    println "3-create-sonar-nexus-credentials.groovy"
+    println "2-create-sonar-nexus-credentials.groovy"
     // revoking SonarQube token
     def revokePost = new URL(System.getenv("sonar_host") + ":" + System.getenv("sonar_port") +"/api/user_tokens/revoke").openConnection();
     def message = "login="+System.getenv("sonarqube_user")+"&name=jenkins"

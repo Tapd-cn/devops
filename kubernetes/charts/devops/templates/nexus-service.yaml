@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.nexus.name }}
+  labels:
+    app: {{ .Values.nexus.name }}
+    service: {{ include "devops.name" . }}
+    {{- include "devops.labels" . | nindent 4 }}    
+spec:
+  type: {{ .Values.nexus.service.type }}
+  ports:
+    - name: {{ .Values.nexus.service.port }}-http
+      port: 8081
+      targetPort: {{ .Values.nexus.service.port }}      
+  selector:
+    app: {{ .Values.nexus.name }}
+    service: {{ include "devops.name" . }}
+    {{- include "devops.selectorLabels" . | nindent 4 }}      

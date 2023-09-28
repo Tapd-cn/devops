@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.tapd.name }}
+  namespace: {{ .Values.tapd.namespace }}
+  labels:
+    app: {{ .Values.tapd.name }}
+    service: {{ include "devops.name" . }}
+    {{- include "devops.labels" . | nindent 4 }}
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    metadata:
+      name: {{ .Values.tapd.name }}
+      {{- with .Values.tapd.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app: {{ .Values.tapd.name }}
+        service: {{ include "devops.name" . }}
+        {{- include "devops.selectorLabels" . | nindent 8 }}             
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+      - name: copy-ro-scripts
+        image: busybox
+        imagePullPolicy: IfNotPresent        
+        command: ['sh', '-c', 'cp /tapd-config/* /etc/tapd-scripts/']
+        volumeMounts:
+          - name: tapd-config
+            mountPath: /tapd-config
+          - name: tapd-scripts
+            mountPath: /etc/tapd-scripts
+      containers:
+      - name: tapd
+        image: "curlimages/curl:latest"
+        imagePullPolicy: IfNotPresent
+        workingDir: /etc/tapd-scripts           
+        command: [ "sh", "/etc/tapd-scripts/start.sh" ]
+        envFrom:
+          - secretRef:
+              name: {{ .Values.jenkins.name }}
+        env:
+          - name: jenkins_host
+            value: "http://{{ .Values.jenkins.name | default "jenkins" }}"            
+          - name: jenkins_port
+            value: "{{ .Values.jenkins.service.port | default "8080" }}"
+          - name: jenkins_visit_address
+            value: "{{ .Values.tapd.jenkins_visit_address | default "https://jenkins.tapd.cn" }}"
+          - name: tapd_auth_url
+            value: "{{ .Values.tapd.tapd_auth_url | default "https://tapd.cn/devops/auth/index/" }}"
+          - name: tapd_auth_secret
+            value: "{{ .Values.tapd.tapd_auth_secret | default "bce5e3824a1e859650ce6d492a3efc1b" }}"                   
+        volumeMounts:
+          - mountPath: /etc/tapd-scripts
+            name: tapd-scripts
+      volumes:
+      - name: tapd-config
+        configMap:
+          name: "{{ .Values.tapd.name }}-config"
+      - name: tapd-scripts
+        emptyDir: {}

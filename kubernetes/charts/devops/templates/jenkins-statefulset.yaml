@@ -1,0 +1,177 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.jenkins.name }}
+  labels:
+    app: {{ .Values.jenkins.name }}
+    service: {{ include "devops.name" . }}
+    {{- include "devops.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ .Values.jenkins.name }}
+  {{- if not .Values.jenkins.autoscaling.enabled }}
+  replicas: {{ .Values.jenkins.replicaCount }}
+  {{- end }}  
+  selector:
+    matchLabels:
+      app: {{ .Values.jenkins.name }}
+      service: {{ include "devops.name" . }}
+      {{- include "devops.selectorLabels" . | nindent 6 }}     
+  template:
+    metadata:
+      name: {{ .Values.jenkins.name }}
+      {{- with .Values.jenkins.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app: {{ .Values.jenkins.name }}
+        service: {{ include "devops.name" . }}
+        {{- include "devops.selectorLabels" . | nindent 8 }}           
+    spec:
+      initContainers:
+        - name: kona-jdk-init
+          image: ccr.ccs.tencentyun.com/tapd-devops/tencentkona11:1.0.0
+          imagePullPolicy: IfNotPresent
+          command: ["cp", "-r", "/opt/java/openjdk", "/kona"]
+          volumeMounts:
+            - name: kona-java-home
+              mountPath: /kona
+        - name: init
+          image: "{{ .Values.jenkins.image.repository | default "jenkins/jenkins" }}:{{ .Values.jenkins.image.tag | default "lts" }}"          
+          imagePullPolicy: {{ .Values.jenkins.image.pullPolicy }}          
+          securityContext:
+            {{- toYaml .Values.jenkins.securityContext | nindent 12 }}   
+          command: [ "sh", "/var/jenkins_config/apply_config.sh" ]
+          env:
+            - name: JENKINS_UC_DOWNLOAD
+              value: "https://mirrors.tuna.tsinghua.edu.cn/jenkins/"
+          resources:
+            {{- toYaml .Values.jenkins.resources | nindent 12 }}                    
+          volumeMounts:
+            - mountPath: /var/jenkins_home
+              name: jenkins-home
+            - mountPath: /var/jenkins_config
+              name: jenkins-config
+            - mountPath: /usr/share/jenkins/ref/plugins
+              name: plugins
+            - mountPath: /var/jenkins_plugins
+              name: plugin-dir
+            - mountPath: /tmp
+              name: tmp-volume
+            - mountPath: /var/jenkins_home/init.groovy.d
+              name: init-scripts              
+      containers:
+        - name: jenkins
+          image: "{{ .Values.jenkins.image.repository | default "jenkins/jenkins" }}:{{ .Values.jenkins.image.tag | default "lts" }}"                    
+          imagePullPolicy: {{ .Values.jenkins.image.pullPolicy }}          
+          securityContext:
+            {{- toYaml .Values.jenkins.securityContext | nindent 12 }}               
+          args: [ "--httpPort=8080"]
+          envFrom:
+            - secretRef:
+                name: {{ .Values.jenkins.name }}
+            - secretRef:
+                name: {{ .Values.sonarqube.name }}
+            - secretRef:
+                name: {{ .Values.nexus.name }}
+          env:
+            - name: JAVA_OPTS
+              value: "-Djenkins.install.runSetupWizard=false"
+            - name: JENKINS_OPTS
+              value: "--webroot=/var/jenkins_cache/war"
+            - name: JENKINS_SLAVE_AGENT_PORT
+              value: "50000"
+            - name: sonar_host
+              value: "http://{{ .Values.sonarqube.name | default "sonarqube" }}"
+            - name: sonar_port
+              value: "{{ .Values.sonarqube.service.port | default "9000" }}"
+            - name: nexus_host
+              value: "http://{{ .Values.nexus.name | default "nexus" }}"
+            - name: nexus_port
+              value: "{{ .Values.nexus.service.port | default "8081" }}"
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 50000
+              name: agent-listener
+          startupProbe:
+            httpGet:
+              path: /login
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /login
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /login
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.jenkins.resources | nindent 12 }}                  
+          volumeMounts:
+            - mountPath: /var/jenkins_home
+              name: jenkins-home
+              readOnly: false
+            - mountPath: /var/jenkins_config
+              name: jenkins-config
+              readOnly: true
+            - mountPath: /usr/share/jenkins/ref/plugins/
+              name: plugin-dir
+              readOnly: false
+            - mountPath: /var/jenkins_home/init.groovy.d
+              name: init-scripts
+            - name: jenkins-cache
+              mountPath: /var/jenkins_cache
+            - mountPath: /tmp
+              name: tmp-volume
+            - mountPath: /opt/java
+              name: kona-java-home
+      volumes:
+        - name: plugins
+          emptyDir: {}
+        - name: init-scripts
+          projected:
+            sources:
+            - configMap:
+                name: "{{ .Values.jenkins.name | default "jenkins" }}-init-scripts"
+        - name: jenkins-config
+          configMap:
+            name: "{{ .Values.jenkins.name | default "jenkins" }}-config"
+        - name: plugin-dir
+          emptyDir: {}
+        - name: jenkins-cache
+          emptyDir: {}
+        - name: jenkins-home
+          emptyDir: {}
+        - name: tmp-volume
+          emptyDir: {}
+        - name: kona-java-home
+          emptyDir: {}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "devops.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.jenkins.podSecurityContext | nindent 8 }}        
+      {{- with .Values.jenkins.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.jenkins.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.jenkins.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

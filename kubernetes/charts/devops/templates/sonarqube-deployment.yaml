@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.sonarqube.name }}
+  labels:
+    app: {{ .Values.sonarqube.name }}
+    service: {{ include "devops.name" . }}
+    {{- include "devops.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.nexus.autoscaling.enabled }}
+  replicas: {{ .Values.sonarqube.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ .Values.sonarqube.name }}
+      service: {{ include "devops.name" . }}
+      {{- include "devops.selectorLabels" . | nindent 6 }}      
+  template:
+    metadata:
+      name: {{ .Values.sonarqube.name }}
+      {{- with .Values.sonarqube.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app: {{ .Values.sonarqube.name }}
+        service: {{ include "devops.name" . }}
+        {{- include "devops.selectorLabels" . | nindent 8 }}     
+    spec:
+      initContainers:
+        - name: kona-jdk-init
+          image: ccr.ccs.tencentyun.com/tapd-devops/tencentkona11:1.0.0
+          imagePullPolicy: IfNotPresent
+          command: ["cp", "-r", "/opt/java/openjdk", "/kona"]
+          volumeMounts:
+            - name: kona-java-home
+              mountPath: /kona    
+      containers:
+        - name: sonarqube
+          image: "{{ .Values.sonarqube.image.repository | default "sonarqube" }}:{{ .Values.sonarqube.image.tag | default "8.9.5-community" }}"
+          imagePullPolicy: {{ .Values.sonarqube.image.pullPolicy }}
+          env:
+          - name: TZ
+            value: Asia/Shanghai
+          - name: LANG
+            value: C.UTF-8
+          - name: LANGUAGE
+            value: C.UTF-8
+          - name: LC_ALL
+            value: C.UTF-8
+          ports:
+          - name: 9000-http
+            containerPort: 9000
+          volumeMounts:
+          - mountPath: /opt/sonarqube/data
+            name: sonarqube
+            subPath: data
+          - mountPath: /opt/sonarqube/temp
+            name: sonarqube
+            subPath: temp
+          - mountPath: /opt/sonarqube/logs
+            name: sonarqube
+            subPath: logs
+          - mountPath: /tmp
+            name: tmp-dir
+          - mountPath: /opt/java
+            name: kona-java-home
+          livenessProbe:
+            httpGet:
+              path: /api/system/status
+              port: 9000-http
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/system/status
+              port: 9000-http
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 6 
+          resources:
+            {{- toYaml .Values.sonarqube.resources | nindent 12 }}              
+      volumes:
+        - name: sonarqube
+          emptyDir: {}
+        - name : tmp-dir
+          emptyDir: {}
+        - name: kona-java-home
+          emptyDir: {}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "devops.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.sonarqube.podSecurityContext | nindent 8 }}        
+      {{- with .Values.sonarqube.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.sonarqube.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.sonarqube.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

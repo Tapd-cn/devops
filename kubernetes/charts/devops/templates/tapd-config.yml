@@ -1,0 +1,187 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Values.tapd.name }}-config"
+  labels:
+    app: {{ .Values.tapd.name }}
+    service: {{ include "devops.name" . }}
+    {{- include "devops.labels" . | nindent 4 }}
+data:
+  start.sh: |-
+    echo "generating ApiToken of jenkins $jenkins_user account...";
+    CRUMB=$(curl -slL -u "${jenkins_user}:${jenkins_user_password}" $jenkins_host:$jenkins_port/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\) -c cookies.txt)
+    JenkinsApiToken=$(curl -slL -u "${jenkins_user}:${jenkins_user_password}" $jenkins_host:$jenkins_port/user/admin/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken \
+    -H "${CRUMB}" \
+    --data 'newTokenName=devopsinit' \
+    -b cookies.txt | sed -n -e 's/"//gp' | sed -n -e 's/,/\n/gp'| grep tokenValue: | awk -F ':' '{print $2}')
+    JenkinsApiToken=${JenkinsApiToken%\}\}*}
+
+    echo "inject environment variables";
+    curl -slL -u "${jenkins_user}:${JenkinsApiToken}" \
+    --data-urlencode "script=System.setProperty(\"admin_api_token\", \"${JenkinsApiToken}\");System.setProperty(\"tapd_auth_url\", \"${tapd_auth_url}\");System.setProperty(\"tapd_auth_secret\", \"${tapd_auth_secret}\");System.setProperty(\"jenkins_visit_address\", \"${jenkins_visit_address}\");System.setProperty(\"jenkins_user\", \"${jenkins_user}\");" \
+    $jenkins_host:$jenkins_port/scriptText
+
+    echo "remote call 1-get-env.groovy";
+    curl -slL -u "${jenkins_user}:${JenkinsApiToken}" \
+    --data-urlencode "script=$(cat ./1-get-env.groovy)" \
+    $jenkins_host:$jenkins_port/scriptText
+
+    echo "remote call 2-init-tapd-global-config.groovy";
+    curl -slL -u "${jenkins_user}:${JenkinsApiToken}" \
+    --data-urlencode "script=$(cat ./2-init-tapd-global-config.groovy)" \
+    $jenkins_host:$jenkins_port/scriptText
+
+    echo "remote call 3-create-demo-workflow-job.groovy";
+    curl -slL -u "${jenkins_user}:${JenkinsApiToken}" \
+    --data-urlencode "script=$(cat ./3-create-demo-workflow-job.groovy)" \
+    $jenkins_host:$jenkins_port/scriptText    
+
+    echo "job finished";
+
+  1-get-env.groovy: |-
+    import hudson.AbortException
+    println "execute 1-get-env.groovy"
+
+    String hash = System.getProperty("tapd_auth_secret")
+    String tapdAuthPre= System.getProperty("tapd_auth_url")
+    // GET
+    def get = new URL(tapdAuthPre+hash).openConnection()
+    def getRC = get.getResponseCode()
+    if(getRC.equals(200)){
+      String[] ret = get.getInputStream().getText().split("\\|")
+      System.setProperty("tapd_workspace_id", ret[0])
+      System.setProperty("jenkins_name", ret[1])
+      System.setProperty("tapd_web_hook_url", ret[2])
+      System.setProperty("tapd_secret_token", ret[3])
+    }else{
+      throw new AbortException("TAPD auth faild")
+    }
+
+  2-init-tapd-global-config.groovy: |-
+    import com.tencent.tapd.jenkins.plugins.pipeline.TapdConfigLink
+    import com.tencent.tapd.jenkins.plugins.pipeline.TapdEventConstant
+    import com.tencent.tapd.jenkins.plugins.pipeline.util.TapdLog
+    import com.tencent.tapd.model.TapdWebHook
+    import com.tencent.tapd.model.TapdRequest
+    import com.tencent.tapd.model.Response
+    import net.sf.json.JSONObject
+    import hudson.ExtensionList
+    println "2-init-tapd-global-config.groovy"
+    String url = System.getProperty("tapd_web_hook_url")
+    String secretToken = System.getProperty("tapd_secret_token")
+    String workspaceId = System.getProperty("tapd_workspace_id")
+    String jenkinsName = System.getProperty("jenkins_name")
+    String apiToken = System.getProperty("admin_api_token")
+    String jenkinsVisitAddress = System.getProperty("jenkins_visit_address")
+
+    TapdConfigLink tcl = ExtensionList.lookupSingleton(TapdConfigLink)
+
+    tcl.setJenkinsName(jenkinsName)
+    tcl.setJenkinsUser(System.getProperty("jenkins_user"))
+    tcl.setJenkinsVisitAddress(jenkinsVisitAddress)
+    tcl.setJenkinsToken(apiToken)
+    String newJenkinsTag = UUID.randomUUID().toString()
+    tcl.setJenkinsTag(newJenkinsTag)
+
+    boolean shouldSave = false
+
+    JSONObject configBean = new JSONObject()
+    configBean.put("jenkins_user_name",tcl.getJenkinsUser())
+    configBean.put("api_token", tcl.getJenkinsToken())
+    configBean.put("jenkins_visit_address", tcl.getJenkinsVisitAddress())
+    configBean.put("relate_workspace_id", workspaceId)
+    configBean.put("jenkins_tag", newJenkinsTag)
+
+    TapdWebHook newFirstWebHook = null
+    ArrayList<TapdWebHook> newTapdWebHooks = new ArrayList<TapdWebHook>()
+
+
+    String errorMsg = ""
+
+    TapdWebHook currentWebhook = new TapdWebHook(url, secretToken)
+    currentWebhook.setWorkspaceId(workspaceId)
+    TapdRequest tapdRequest = new TapdRequest(TapdEventConstant.OP_CONFIG_SAVE_GLOBAL_CONFIG, configBean)
+    Response response = tapdRequest.executeByParams(currentWebhook.getUrl(),
+            currentWebhook.getSecretToken(),
+            tcl.getJenkinsName())
+
+    if (null == response) {
+        errorMsg = errorMsg + "保存失败\n"
+        TapdLog.error("配置保存失败")
+    } else if (response.isSuccess()) {
+        Map<String, String> mapData = response.getData()
+        String resWorkspaceId = mapData.getOrDefault("workspace_id", "")
+        if (!"".equals(resWorkspaceId)) {
+          currentWebhook.setWorkspaceId(resWorkspaceId)
+          shouldSave = true
+          newFirstWebHook = currentWebhook        
+        }
+    } else {
+        errorMsg = errorMsg + response.getErrorMessage() + "\n"
+        TapdLog.error("配置保存失败" + response.getErrorMessage())
+    }
+    if (shouldSave) {
+        tcl.setFirstWebHook(newFirstWebHook)
+        tcl.setTapdWebHooks(newTapdWebHooks)
+        tcl.save()
+    } else {
+        TapdLog.error("配置保存失败" + errorMsg)
+    }
+    TapdLog.info("提交配置保存记录成功!")
+
+  3-create-demo-workflow-job.groovy: |-
+    // Adds a pipeline job to jenkins
+    import jenkins.model.Jenkins
+    import org.jenkinsci.plugins.workflow.job.WorkflowJob
+    import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition
+    import org.jenkinsci.plugins.workflow.flow.FlowDefinition
+    import com.tencent.tapd.jenkins.plugins.pipeline.job.TapdPipeLineJobProperty
+    import hudson.plugins.git.GitSCM
+    import hudson.plugins.git.BranchSpec
+    import hudson.plugins.git.UserRemoteConfig
+    import com.cloudbees.hudson.plugins.folder.*
+
+    println "3-create-demo-workflow-job.groovy"
+
+    // Required plugins: 
+    // - git
+    // - workflow-aggregator
+    // - tapd
+    //
+
+    // Variables
+    String jobName = "DemoPipeline"
+    String jobDescription = "这是一条Demo流水线，包含构建对象、代码检查、自动化测试、构建制品等环节。如不需使用，可以在Jenkins中删除当前Pipeline。"
+    String jobScript = "Jenkinsfile"
+    String gitRepo = "https://github.com/Tapd-cn/simple-jenkins-demo-pipeline.git"
+    String gitRepoName = "simple-jenkins-demo-pipeline"
+    String gitRepoBranches = "*/master"
+    String credentialsId = ""
+    String workspaceId = System.getProperty("tapd_workspace_id")
+
+    // Create pipeline
+    Jenkins jenkins = Jenkins.instance
+
+    // Create the git configuration
+    UserRemoteConfig userRemoteConfig = new UserRemoteConfig(gitRepo, gitRepoName, null, credentialsId)
+    branches = Collections.singletonList(new BranchSpec(gitRepoBranches))
+    doGenerateSubmoduleConfigurations = false
+    submoduleCfg = null
+    browser = null
+    gitTool = null
+    extensions = []
+    GitSCM scm = new GitSCM([userRemoteConfig], branches, doGenerateSubmoduleConfigurations, submoduleCfg, browser, gitTool, extensions)
+
+    // Create the workflow
+    FlowDefinition flowDefinition = (FlowDefinition) new CpsScmFlowDefinition(scm, jobScript)
+
+    // Create job
+    job = jenkins.createProject(WorkflowJob, jobName)
+    TapdPipeLineJobProperty javernb = new TapdPipeLineJobProperty(workspaceId,UUID.randomUUID().toString(),"")
+    // Add the workflow to the job
+    job.setDefinition(flowDefinition)
+    job.addProperty(javernb)
+    job.description = jobDescription
+
+    // Save
+    job.save()
